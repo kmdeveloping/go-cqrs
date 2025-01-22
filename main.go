@@ -27,7 +27,7 @@ func main() {
 		fmt.Println(err.Error())
 	}
 
-	for _, r := range result.Result {
+	for _, r := range *result {
 		fmt.Println(r)
 	}
 }

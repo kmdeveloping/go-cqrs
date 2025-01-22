@@ -10,11 +10,17 @@ type GetSomethingCommand struct {
 	CustomerNumber string
 }
 
-func (c *GetSomethingCommand) Execute(command *GetSomethingCommand) error {
+type GetSomethingCommandHandler struct {
+	command.BaseCommandHandler[GetSomethingCommand]
+}
+
+func (c *GetSomethingCommandHandler) execute(command *GetSomethingCommand) error {
 	fmt.Println(command.CustomerNumber)
 	return nil
 }
 
-func NewGetSomethingCommandHandler() command.CommandHandler[*GetSomethingCommand] {
-	return &GetSomethingCommand{}
+func NewGetSomethingCommandHandler() *GetSomethingCommandHandler {
+	handler := &GetSomethingCommandHandler{}
+	handler.Execute = handler.execute
+	return handler
 }

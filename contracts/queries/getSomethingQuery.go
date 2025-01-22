@@ -2,20 +2,25 @@ package queries
 
 import "github.com/kmdeveloping/go-cqrs/query"
 
+// Query contract
 type GetSomethingQuery struct {
 	CustomerNumber string
 }
 
-type GetSomethingQueryResponse struct {
-	Result []string
+// query specific handler extending base handler with concrete types
+type GetSomethingQueryHandler struct {
+	query.BaseQueryHandler[GetSomethingQuery, []string]
 }
 
-func (q *GetSomethingQuery) Execute(query *GetSomethingQuery) (*GetSomethingQueryResponse, error) {
-	return &GetSomethingQueryResponse{
-		Result: []string{query.CustomerNumber, query.CustomerNumber, query.CustomerNumber},
-	}, nil
+// non public handler execute function
+func (q *GetSomethingQueryHandler) execute(query *GetSomethingQuery) (*[]string, error) {
+	list := []string{query.CustomerNumber, query.CustomerNumber, query.CustomerNumber}
+	return &list, nil
 }
 
-func NewGetSomethingQueryHandler() query.QueryHandler[*GetSomethingQuery, *GetSomethingQueryResponse] {
-	return &GetSomethingQuery{}
+// public getter to access Execute function
+func NewGetSomethingQueryHandler() *GetSomethingQueryHandler {
+	handler := &GetSomethingQueryHandler{}
+	handler.Execute = handler.execute
+	return handler
 }
