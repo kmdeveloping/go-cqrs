@@ -19,7 +19,7 @@ func (c *GetSomethingCommandHandler) execute(command *GetSomethingCommand) error
 	return nil
 }
 
-func NewGetSomethingCommandHandler() *GetSomethingCommandHandler {
+func NewGetSomethingCommand() *GetSomethingCommandHandler {
 	handler := &GetSomethingCommandHandler{}
 	handler.Execute = handler.execute
 	return handler

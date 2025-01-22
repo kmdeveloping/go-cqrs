@@ -13,7 +13,7 @@ func main() {
 		CustomerNumber: "0983409283",
 	}
 
-	err := commands.NewGetSomethingCommandHandler().Execute(cmd)
+	err := commands.NewGetSomethingCommand().Execute(cmd)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -22,7 +22,7 @@ func main() {
 		CustomerNumber: "098502985838",
 	}
 
-	result, err := queries.NewGetSomethingQueryHandler().Execute(query)
+	result, err := queries.NewGetSomethingQuery().Execute(query)
 	if err != nil {
 		fmt.Println(err.Error())
 	}

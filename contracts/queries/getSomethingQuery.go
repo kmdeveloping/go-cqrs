@@ -19,7 +19,7 @@ func (q *GetSomethingQueryHandler) execute(query *GetSomethingQuery) (*[]string,
 }
 
 // public getter to access Execute function
-func NewGetSomethingQueryHandler() *GetSomethingQueryHandler {
+func NewGetSomethingQuery() *GetSomethingQueryHandler {
 	handler := &GetSomethingQueryHandler{}
 	handler.Execute = handler.execute
 	return handler
