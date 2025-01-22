@@ -9,23 +9,11 @@ import (
 )
 
 func main() {
-
-	cmd := &commands.DoSomethingCommand{CustomerNumber: "4563490848"}
-
-	err := commandHandlers.NewDoSomethingCommand().Execute(cmd)
-	if err != nil {
+	if err := commandHandlers.NewDoSomethingCommand().Execute(&commands.DoSomethingCommand{CustomerNumber: "4563490848"}); err != nil {
 		fmt.Println(err.Error())
 	}
 
-	query := &queries.GetSomethingQuery{
-		CustomerNumber: "098502985838",
-	}
-
-	result, err := queryHandlers.NewGetSomethingQuery().Execute(query)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	if result != nil {
+	if result, _ := queryHandlers.NewGetSomethingQuery().Execute(&queries.GetSomethingQuery{CustomerNumber: "098502985838"}); result != nil {
 		for _, r := range *result {
 			fmt.Println(r)
 		}

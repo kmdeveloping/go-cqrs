@@ -1,13 +1,13 @@
 package queryHandlers
 
 import (
+	"github.com/kmdeveloping/go-cqrs/core/query"
 	"github.com/kmdeveloping/go-cqrs/example/contracts/queries"
-	"github.com/kmdeveloping/go-cqrs/query"
 )
 
 // GetSomethingQueryHandler query specific handler extending base handler with concrete types
 type GetSomethingQueryHandler struct {
-	query.BaseQueryHandler[queries.GetSomethingQuery, []string]
+	query.BaseQueryHandler[queries.GetSomethingQuery, []string] `di.inject:"queryHandler"`
 }
 
 // non-public handler execute function
