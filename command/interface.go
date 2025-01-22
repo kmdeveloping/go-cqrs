@@ -2,6 +2,6 @@ package command
 
 type ICommand interface{}
 
-type CommandHandler[TCommand ICommand] interface {
-	Execute(TCommand) error
+type BaseCommandHandler[TCommand ICommand] struct {
+	Execute func(*TCommand) error
 }
