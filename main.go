@@ -26,8 +26,9 @@ func main() {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-
-	for _, r := range *result {
-		fmt.Println(r)
+	if result != nil {
+		for _, r := range *result {
+			fmt.Println(r)
+		}
 	}
 }
