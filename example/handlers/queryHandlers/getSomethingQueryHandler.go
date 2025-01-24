@@ -7,7 +7,7 @@ import (
 
 // GetSomethingQueryHandler query specific handler extending base handler with concrete types
 type GetSomethingQueryHandler struct {
-	query.BaseQueryHandler[queries.GetSomethingQuery, []string] `di.inject:"queryHandler"`
+	query.BaseQueryHandler[queries.GetSomethingQuery, []string]
 }
 
 // non-public handler execute function
