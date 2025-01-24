@@ -1,12 +1,26 @@
 package manager
 
 import (
+	"errors"
 	"reflect"
+
+	"github.com/kmdeveloping/go-cqrs/core/command"
+	"github.com/kmdeveloping/go-cqrs/core/event"
+	"github.com/kmdeveloping/go-cqrs/core/query"
+	"github.com/kmdeveloping/go-cqrs/core/validator"
 )
 
+var defaultHandlerName = "Handler"
+
+type ICmdQry interface {
+	command.ICommand
+	query.IQuery
+}
+
 type ICqrsManager interface {
-	ExecuteTask(any, any) error
-	ExecuteTaskWithResult(any) (any, error)
+	Execute(T ICmdQry) error
+	Publish(T event.IEvent) error
+	Validate(T validator.IValidator) (any, error)
 }
 
 type CqrsManager struct {
@@ -18,14 +32,21 @@ func NewCqrsManager() ICqrsManager {
 	return &CqrsManager{}
 }
 
-func (m *CqrsManager) ExecuteTask(THandler any, TCommand any) error {
-	task := []reflect.Value{}
-	t := append(task, reflect.ValueOf(TCommand))
+func (m *CqrsManager) Execute(T ICmdQry) error {
+	task := []reflect.Value{reflect.ValueOf(T)}
+	h := reflect.ValueOf(T).MethodByName(defaultHandlerName)
+	res := h.Call(task)
+	if err := res[0].Interface(); err != nil {
+		return errors.New(err.(string))
+	}
 
-	reflect.ValueOf(THandler).MethodByName("execute").Call(t)
 	return nil
 }
 
-func (m *CqrsManager) ExecuteTaskWithResult(T any) (any, error) {
+func (m *CqrsManager) Publish(T event.IEvent) error {
+	return nil
+}
+
+func (m *CqrsManager) Validate(T validator.IValidator) (any, error) {
 	return nil, nil
 }
