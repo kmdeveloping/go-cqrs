@@ -19,11 +19,10 @@ func init() {
 	}
 
 	config := &cqrs.CqrsConfiguration{
-		Registry:               registry.NewRegistry().RegisterHandlers(services),
-		EnableLoggingDecorator: true,
+		Registry: registry.NewRegistry().RegisterHandlers(services),
 	}
 
-	dispatcher = cqrs.NewCqrsManager(config)
+	dispatcher = cqrs.NewCqrsManager(config).UseLoggingDecorator()
 }
 
 func main() {

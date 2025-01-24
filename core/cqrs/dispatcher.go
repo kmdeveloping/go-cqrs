@@ -16,6 +16,7 @@ type ICqrsManager interface {
 	Get(T query.IQuery) error
 	Publish(T event.IEvent) error
 	Validate(T validator.IValidator) error
+	UseLoggingDecorator() ICqrsManager
 }
 
 type CqrsManager struct {
@@ -26,6 +27,11 @@ var _ ICqrsManager = (*CqrsManager)(nil)
 
 func NewCqrsManager(config *CqrsConfiguration) ICqrsManager {
 	return &CqrsManager{config: config}
+}
+
+func (m *CqrsManager) UseLoggingDecorator() ICqrsManager {
+	m.config.enableLoggingDecorator = true
+	return m
 }
 
 func (m *CqrsManager) Execute(T command.ICommand) error {
@@ -86,7 +92,7 @@ func (m *CqrsManager) Setup(T any) (handlers.IHandler, error) {
 		return nil, err
 	}
 
-	if m.config.EnableLoggingDecorator {
+	if m.config.enableLoggingDecorator {
 		handler = decorators.UseLoggingDecorator(handler)
 	}
 
