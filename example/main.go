@@ -16,11 +16,11 @@ func init() {
 
 func main() {
 
-	cmd := commands.DoSomethingCommand{
+	cmd := &commands.DoSomethingCommand{
 		CustomerNumber: "987098798re8",
 	}
 
-	if e := cqrsManager.Execute(&cmd); e != nil {
+	if e := cqrsManager.Execute(cmd); e != nil {
 		fmt.Println(e.Error())
 	}
 
