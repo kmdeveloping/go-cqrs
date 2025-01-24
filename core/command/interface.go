@@ -2,6 +2,6 @@ package command
 
 type ICommand interface{}
 
-type BaseCommandHandler[TCommand ICommand] struct {
-	Execute func(*TCommand) error
-}
+type CommandBase struct{}
+
+var _ ICommand = (*CommandBase)(nil)

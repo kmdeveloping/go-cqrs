@@ -1,7 +1,9 @@
 package query
 
-type IQuery interface{}
-
-type BaseQueryHandler[TQuery IQuery, TResult any] struct {
-	Execute func(*TQuery) (*TResult, error)
+type IQuery interface {
 }
+type QueryBase[TResult any] struct {
+	Result TResult
+}
+
+var _ IQuery = (*QueryBase[any])(nil)

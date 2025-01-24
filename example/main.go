@@ -1,21 +1,34 @@
 package main
 
 import (
-	"fmt"
-	"github.com/kmdeveloping/go-cqrs/example/contracts/commands"
-	"github.com/kmdeveloping/go-cqrs/example/contracts/queries"
-	"github.com/kmdeveloping/go-cqrs/example/handlers/commandHandlers"
-	"github.com/kmdeveloping/go-cqrs/example/handlers/queryHandlers"
+	"github.com/kmdeveloping/go-cqrs/core/cqrs"
+	"github.com/kmdeveloping/go-cqrs/core/registry"
+	"github.com/kmdeveloping/go-cqrs/example/contracts"
+	"github.com/kmdeveloping/go-cqrs/example/handler"
 )
 
-func main() {
-	if err := commandHandlers.NewDoSomethingCommand().Execute(&commands.DoSomethingCommand{CustomerNumber: "4563490848"}); err != nil {
-		fmt.Println(err.Error())
+var dispatcher cqrs.ICqrsManager
+
+func init() {
+
+	services := []registry.Service{
+		{
+			TContract: contracts.DoSomethingCommand{},
+			THandler:  &handler.DoThatCommandHandler{},
+		},
 	}
 
-	if result, _ := queryHandlers.NewGetSomethingQuery().Execute(&queries.GetSomethingQuery{CustomerNumber: "098502985838"}); result != nil {
-		for _, r := range *result {
-			fmt.Println(r)
-		}
+	config := &cqrs.CqrsConfiguration{
+		Registry:               registry.NewRegistry().RegisterHandlers(services),
+		EnableLoggingDecorator: true,
+	}
+
+	dispatcher = cqrs.NewCqrsManager(config)
+}
+
+func main() {
+	h := dispatcher.Execute(contracts.DoSomethingCommand{Something: "Hello"})
+	if h != nil {
+		return
 	}
 }
