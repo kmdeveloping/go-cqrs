@@ -2,9 +2,13 @@ package main
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/google/uuid"
+	"github.com/kmdeveloping/go-cqrs/core/event"
 	"github.com/kmdeveloping/go-cqrs/core/manager"
 	"github.com/kmdeveloping/go-cqrs/example/contracts/commands"
+	"github.com/kmdeveloping/go-cqrs/example/contracts/events"
 	"github.com/kmdeveloping/go-cqrs/example/contracts/queries"
 )
 
@@ -34,5 +38,17 @@ func main() {
 
 	for _, r := range qry.Result {
 		fmt.Println(r)
+	}
+
+	evnt := &events.SomeEventOne{
+		Name: "Superman",
+		EventBase: &event.EventBase{
+			CorrelationUid: uuid.New(),
+			ExecutionTime:  time.Now(),
+		},
+	}
+
+	if err := cqrsManager.Publish(evnt); err != nil {
+		fmt.Println(err.Error())
 	}
 }

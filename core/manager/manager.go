@@ -44,6 +44,16 @@ func (m *CqrsManager) Execute(T ICmdQry) error {
 }
 
 func (m *CqrsManager) Publish(T event.IEvent) error {
+	v := reflect.ValueOf(T)
+	event := []reflect.Value{v}
+
+	for i := 0; i < v.Type().NumMethod(); i++ {
+		res := v.Method(i).Call(event)
+		if err := res[0].Interface(); err != nil {
+			return errors.New(err.(string))
+		}
+	}
+
 	return nil
 }
 
