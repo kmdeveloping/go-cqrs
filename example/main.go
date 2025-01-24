@@ -1,54 +1,34 @@
 package main
 
 import (
-	"fmt"
-	"time"
-
-	"github.com/google/uuid"
-	"github.com/kmdeveloping/go-cqrs/core/event"
-	"github.com/kmdeveloping/go-cqrs/core/manager"
-	"github.com/kmdeveloping/go-cqrs/example/contracts/commands"
-	"github.com/kmdeveloping/go-cqrs/example/contracts/events"
-	"github.com/kmdeveloping/go-cqrs/example/contracts/queries"
+	"github.com/kmdeveloping/go-cqrs/core/cqrs"
+	"github.com/kmdeveloping/go-cqrs/core/registry"
+	"github.com/kmdeveloping/go-cqrs/example/contracts"
+	"github.com/kmdeveloping/go-cqrs/example/handler"
 )
 
-var cqrsManager manager.ICqrsManager
+var dispatcher cqrs.ICqrsManager
 
 func init() {
-	cqrsManager = manager.NewCqrsManager()
-}
 
-func main() {
-
-	cmd := &commands.DoSomethingCommand{
-		CustomerNumber: "987098798re8",
-	}
-
-	if e := cqrsManager.Execute(cmd); e != nil {
-		fmt.Println(e.Error())
-	}
-
-	qry := &queries.GetSomethingQuery{
-		CustomerNumber: "ooieurjnavkun8",
-	}
-
-	if err := cqrsManager.Execute(qry); err != nil {
-		fmt.Println(err.Error())
-	}
-
-	for _, r := range qry.Result {
-		fmt.Println(r)
-	}
-
-	evnt := &events.SomeEventOne{
-		Name: "Superman",
-		EventBase: &event.EventBase{
-			CorrelationUid: uuid.New(),
-			ExecutionTime:  time.Now(),
+	services := []registry.Service{
+		{
+			TContract: contracts.DoSomethingCommand{},
+			THandler:  &handler.DoThatCommandHandler{},
 		},
 	}
 
-	if err := cqrsManager.Publish(evnt); err != nil {
-		fmt.Println(err.Error())
+	config := &cqrs.CqrsConfiguration{
+		Registry:               registry.NewRegistry().RegisterHandlers(services),
+		EnableLoggingDecorator: true,
+	}
+
+	dispatcher = cqrs.NewCqrsManager(config)
+}
+
+func main() {
+	h := dispatcher.Execute(contracts.DoSomethingCommand{Something: "Hello"})
+	if h != nil {
+		return
 	}
 }

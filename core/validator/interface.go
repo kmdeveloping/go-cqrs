@@ -2,6 +2,8 @@ package validator
 
 type IValidator interface{}
 
-type BaseValidatorHandler[TValidator IValidator] struct {
-	Validate func(*TValidator) error
+type BaseValidatorHandler struct {
+	Valid bool
 }
+
+var _ IValidator = (*BaseValidatorHandler)(nil)
