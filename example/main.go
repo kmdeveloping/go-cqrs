@@ -10,16 +10,15 @@ import (
 var dispatcher cqrs.ICqrsManager
 
 func init() {
-
-	services := []registry.Service{
+	handlers := []registry.CommandServices{
 		{
-			TContract: contracts.DoSomethingCommand{},
-			THandler:  &handler.DoThatCommandHandler{},
+			Command: contracts.DoSomethingCommand{},
+			Handler: &handler.DoThatCommandHandler{},
 		},
 	}
 
 	config := &cqrs.CqrsConfiguration{
-		Registry: registry.NewRegistry().RegisterHandlers(services),
+		Registry: registry.NewRegistry().RegisterCommandHandlers(handlers),
 	}
 
 	dispatcher = cqrs.NewCqrsManager(config).UseLoggingDecorator()

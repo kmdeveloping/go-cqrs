@@ -4,36 +4,38 @@ import (
 	"errors"
 	"reflect"
 
+	"github.com/kmdeveloping/go-cqrs/core/command"
 	"github.com/kmdeveloping/go-cqrs/core/handlers"
 )
 
 type Registry struct {
-	commandHandlers map[string]handlers.IHandler
+	commandHandlers map[reflect.Type]handlers.ICommandHandler
 }
 
-type Service struct {
-	TContract any
-	THandler  handlers.IHandler
+type CommandServices struct {
+	Command command.ICommand
+	Handler handlers.ICommandHandler
 }
 
 func NewRegistry() *Registry {
 	return &Registry{
-		commandHandlers: make(map[string]handlers.IHandler),
+		commandHandlers: make(map[reflect.Type]handlers.ICommandHandler),
 	}
 }
 
-func (r *Registry) RegisterHandlers(services []Service) *Registry {
-	for _, svc := range services {
-		r.commandHandlers[reflect.TypeOf(svc.TContract).Name()] = svc.THandler
+func (r *Registry) RegisterCommandHandlers(handlerList []CommandServices) *Registry {
+	for _, h := range handlerList {
+		r.commandHandlers[reflect.TypeOf(h.Command)] = h.Handler
 	}
+
 	return r
 }
 
-func (r *Registry) Resolve(T reflect.Type) (handlers.IHandler, error) {
-	handler, exists := r.commandHandlers[T.Name()]
+func (r *Registry) Resolve(T any) (handlers.IHandler, error) {
+	handler, exists := r.commandHandlers[reflect.TypeOf(T)]
 	if !exists {
-		return nil, errors.New("handler not registered for command: " + T.Name())
+		return nil, errors.New("handler not registered for command: " + reflect.TypeOf(T).Name())
 	}
 
-	return handler, nil
+	return handler.(handlers.IHandler), nil
 }

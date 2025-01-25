@@ -1,8 +1,6 @@
 package cqrs
 
 import (
-	"reflect"
-
 	"github.com/kmdeveloping/go-cqrs/core/command"
 	"github.com/kmdeveloping/go-cqrs/core/decorators"
 	"github.com/kmdeveloping/go-cqrs/core/event"
@@ -87,7 +85,7 @@ func (m *CqrsManager) Validate(T validator.IValidator) error {
 }
 
 func (m *CqrsManager) Setup(T any) (handlers.IHandler, error) {
-	handler, err := m.config.Registry.Resolve(reflect.TypeOf(T))
+	handler, err := m.config.Registry.Resolve(T)
 	if err != nil {
 		return nil, err
 	}
