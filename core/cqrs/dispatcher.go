@@ -11,7 +11,7 @@ import (
 
 type ICqrsManager interface {
 	Execute(T command.ICommand) error
-	Get(T query.IQuery) error
+	Get(T query.IQuery) (any, error)
 	Publish(T event.IEvent) error
 	Validate(T validator.IValidator) error
 	UseLoggingDecorator() ICqrsManager
@@ -45,17 +45,18 @@ func (m *CqrsManager) Execute(T command.ICommand) error {
 	return nil
 }
 
-func (m *CqrsManager) Get(T query.IQuery) error {
+func (m *CqrsManager) Get(T query.IQuery) (any, error) {
 	handler, err := m.Setup(T)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if err = handler.Get(T); err != nil {
-		return err
+	response, err := handler.Get(T)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return response, nil
 }
 
 func (m *CqrsManager) Publish(T event.IEvent) error {

@@ -29,7 +29,7 @@ func (l *LoggingDecorator) Validate(TValidator validator.IValidator) error {
 	return l.handler.Validate(TValidator)
 }
 
-func (l *LoggingDecorator) Get(TQuery query.IQuery) error {
+func (l *LoggingDecorator) Get(TQuery query.IQuery) (any, error) {
 	l.logger.Println("i am the query logger decorator")
 	return l.handler.Get(TQuery)
 }

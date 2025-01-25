@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/kmdeveloping/go-cqrs/core/cqrs"
 	"github.com/kmdeveloping/go-cqrs/core/registry"
 	"github.com/kmdeveloping/go-cqrs/example/contracts"
@@ -10,18 +12,27 @@ import (
 var dispatcher cqrs.ICqrsManager
 
 func init() {
-	handlers := []registry.CommandServices{
+	commandHandlers := []registry.CommandServices{
 		{
 			Command: contracts.DoSomethingCommand{},
 			Handler: &handler.DoThatCommandHandler{},
 		},
 	}
 
-	config := &cqrs.CqrsConfiguration{
-		Registry: registry.NewRegistry().RegisterCommandHandlers(handlers),
+	queryHandlers := []registry.QueryServices{
+		{
+			Query:   contracts.GetNewUserQuery{},
+			Handler: &handler.GetNewUserQueryHandler{},
+		},
 	}
 
-	dispatcher = cqrs.NewCqrsManager(config).UseLoggingDecorator()
+	config := &cqrs.CqrsConfiguration{
+		Registry: registry.NewRegistry().
+			RegisterCommandHandlers(commandHandlers).
+			RegisterQueryHandlers(queryHandlers),
+	}
+
+	dispatcher = cqrs.NewCqrsManager(config)
 }
 
 func main() {
@@ -29,4 +40,15 @@ func main() {
 	if h != nil {
 		return
 	}
+
+	r, e := dispatcher.Get(contracts.GetNewUserQuery{
+		FirstName: "Kolten",
+		LastName:  "Mollencopf",
+		Project:   "P1",
+	})
+	if e != nil {
+		return
+	}
+
+	fmt.Println(r)
 }

@@ -9,7 +9,7 @@ import (
 
 type IHandler interface {
 	ICommandHandler
-	IQueryHandler
+	IQueryHandler[any]
 	IEventHandler
 	IValidatorHandler
 }
@@ -18,8 +18,8 @@ type ICommandHandler interface {
 	Run(TCommand command.ICommand) error
 }
 
-type IQueryHandler interface {
-	Get(TQuery query.IQuery) error
+type IQueryHandler[TResult any] interface {
+	Get(TQuery query.IQuery) (TResult, error)
 }
 
 type IEventHandler interface {
@@ -38,8 +38,8 @@ func (h *BaseHandler) Run(TCommand command.ICommand) error {
 	return nil
 }
 
-func (h *BaseHandler) Get(TQuery query.IQuery) error {
-	return nil
+func (h *BaseHandler) Get(TQuery query.IQuery) (any, error) {
+	return nil, nil
 }
 
 func (h *BaseHandler) Publish(TEvent event.IEvent) error {
