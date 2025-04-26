@@ -78,7 +78,7 @@ func (r *Registry) RegisterValidatorHandlers(handlerList []ValidatorServices) *R
 
 func (r *Registry) Resolve(T any) (handlers.IHandler, error) {
 	t := reflect.TypeOf(T)
-	if command, _ := regexp.MatchString("Command", t.Name()); command {
+	if cmd, _ := regexp.MatchString("Command", t.Name()); cmd {
 		handler, exists := r.commandHandlers[t]
 		if !exists {
 			return nil, errors.New("handler not registered for command: " + t.Name())
@@ -87,7 +87,7 @@ func (r *Registry) Resolve(T any) (handlers.IHandler, error) {
 		return handler.(handlers.IHandler), nil
 	}
 
-	if query, _ := regexp.MatchString("Query", t.Name()); query {
+	if qry, _ := regexp.MatchString("Query", t.Name()); qry {
 		handler, exists := r.queryHandlers[t]
 		if !exists {
 			return nil, errors.New("handler not registered for query: " + t.Name())
@@ -96,7 +96,7 @@ func (r *Registry) Resolve(T any) (handlers.IHandler, error) {
 		return handler.(handlers.IHandler), nil
 	}
 
-	if event, _ := regexp.MatchString("Event", t.Name()); event {
+	if evt, _ := regexp.MatchString("Event", t.Name()); evt {
 		//handlers, exists := r.eventHandlers[t]
 		//if !exists {
 		//return nil, errors.New("handler not registered for event: " + t.Name())
@@ -105,7 +105,7 @@ func (r *Registry) Resolve(T any) (handlers.IHandler, error) {
 		return nil, errors.New("event handlers not supported yet")
 	}
 
-	if validator, _ := regexp.MatchString("Validator", t.Name()); validator {
+	if val, _ := regexp.MatchString("Validator", t.Name()); val {
 		handler, exists := r.validateHandlers[t]
 		if !exists {
 			return nil, errors.New("handler not registered for validator: " + t.Name())
