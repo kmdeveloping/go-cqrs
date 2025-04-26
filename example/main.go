@@ -33,6 +33,8 @@ func init() {
 	}
 
 	dispatcher = cqrs.NewCqrsManager(config)
+	dispatcher.UseLoggingDecorator()
+	dispatcher.UseMetricsDecorator()
 }
 
 func main() {

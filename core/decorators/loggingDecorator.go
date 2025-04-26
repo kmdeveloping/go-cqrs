@@ -2,6 +2,7 @@ package decorators
 
 import (
 	"log"
+	"reflect"
 
 	"github.com/kmdeveloping/go-cqrs/core/command"
 	"github.com/kmdeveloping/go-cqrs/core/event"
@@ -11,8 +12,8 @@ import (
 )
 
 type LoggingDecorator struct {
-	logger  *log.Logger
-	handler handlers.IHandler
+	logger *log.Logger
+	next   handlers.IHandler
 }
 
 var _ handlers.IHandler = (*LoggingDecorator)(nil)
@@ -20,25 +21,27 @@ var _ handlers.IHandler = (*LoggingDecorator)(nil)
 // Publish implements handlers.IHandler.
 func (l *LoggingDecorator) Publish(TEvent event.IEvent) error {
 	l.logger.Println("i am the event logger decorator")
-	return l.handler.Publish(TEvent)
+	return l.next.Publish(TEvent)
 }
 
 // Validate implements handlers.IHandler.
 func (l *LoggingDecorator) Validate(TValidator validator.IValidator) error {
 	l.logger.Println("i am the validator logger decorator")
-	return l.handler.Validate(TValidator)
+	return l.next.Validate(TValidator)
 }
 
 func (l *LoggingDecorator) Get(TQuery query.IQuery) (any, error) {
-	l.logger.Println("i am the query logger decorator")
-	return l.handler.Get(TQuery)
+	qry := reflect.TypeOf(TQuery).Name()
+	l.logger.Printf("Executing query type %s\n", qry)
+	return l.next.Get(TQuery)
 }
 
 func (l *LoggingDecorator) Run(TCommand command.ICommand) error {
-	l.logger.Println("i am the logging decorator")
-	return l.handler.Run(TCommand)
+	cmd := reflect.TypeOf(TCommand).Name()
+	l.logger.Printf("Executing command type %s\n", cmd)
+	return l.next.Run(TCommand)
 }
 
 func UseLoggingDecorator(handler handlers.IHandler) handlers.IHandler {
-	return &LoggingDecorator{handler: handler, logger: log.Default()}
+	return &LoggingDecorator{next: handler, logger: log.Default()}
 }

@@ -15,6 +15,7 @@ type ICqrsManager interface {
 	Publish(T event.IEvent) error
 	Validate(T validator.IValidator) error
 	UseLoggingDecorator() ICqrsManager
+	UseMetricsDecorator() ICqrsManager
 }
 
 type CqrsManager struct {
@@ -32,8 +33,13 @@ func (m *CqrsManager) UseLoggingDecorator() ICqrsManager {
 	return m
 }
 
+func (m *CqrsManager) UseMetricsDecorator() ICqrsManager {
+	m.config.enableMetricsDecorator = true
+	return m
+}
+
 func (m *CqrsManager) Execute(T command.ICommand) error {
-	handler, err := m.Setup(T)
+	handler, err := m.setup(T)
 	if err != nil {
 		return err
 	}
@@ -46,7 +52,7 @@ func (m *CqrsManager) Execute(T command.ICommand) error {
 }
 
 func (m *CqrsManager) Get(T query.IQuery) (any, error) {
-	handler, err := m.Setup(T)
+	handler, err := m.setup(T)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +66,7 @@ func (m *CqrsManager) Get(T query.IQuery) (any, error) {
 }
 
 func (m *CqrsManager) Publish(T event.IEvent) error {
-	handler, err := m.Setup(T)
+	handler, err := m.setup(T)
 	if err != nil {
 		return err
 	}
@@ -73,7 +79,7 @@ func (m *CqrsManager) Publish(T event.IEvent) error {
 }
 
 func (m *CqrsManager) Validate(T validator.IValidator) error {
-	handler, err := m.Setup(T)
+	handler, err := m.setup(T)
 	if err != nil {
 		return err
 	}
@@ -85,7 +91,7 @@ func (m *CqrsManager) Validate(T validator.IValidator) error {
 	return nil
 }
 
-func (m *CqrsManager) Setup(T any) (handlers.IHandler, error) {
+func (m *CqrsManager) setup(T any) (handlers.IHandler, error) {
 	handler, err := m.config.Registry.Resolve(T)
 	if err != nil {
 		return nil, err
@@ -93,6 +99,10 @@ func (m *CqrsManager) Setup(T any) (handlers.IHandler, error) {
 
 	if m.config.enableLoggingDecorator {
 		handler = decorators.UseLoggingDecorator(handler)
+	}
+
+	if m.config.enableMetricsDecorator {
+		handler = decorators.UseExecutionTimeDecorator(handler)
 	}
 
 	return handler, nil
