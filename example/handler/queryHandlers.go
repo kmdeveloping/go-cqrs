@@ -10,7 +10,6 @@ import (
 )
 
 type GetNewUserQueryHandler struct {
-	*handlers.BaseHandler
 }
 
 var _ handlers.IQueryHandler = (*GetNewUserQueryHandler)(nil)

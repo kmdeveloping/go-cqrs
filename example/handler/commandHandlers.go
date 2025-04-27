@@ -9,14 +9,13 @@ import (
 )
 
 type DoThatCommandHandler struct {
-	*handlers.BaseHandler
 }
 
 type DoThisCommandWithResultHandler struct {
-	*DoThatCommandHandler
 }
 
 var _ handlers.ICommandHandler = (*DoThatCommandHandler)(nil)
+var _ handlers.ICommandWithResultHandler = (*DoThisCommandWithResultHandler)(nil)
 
 func (d *DoThatCommandHandler) Execute(command command.ICommand) error {
 	cmd, ok := command.(contracts.DoSomethingCommand)
@@ -34,7 +33,6 @@ func (d *DoThisCommandWithResultHandler) ExecuteWithResult(cmd command.ICommandW
 	if !ok {
 		return errors.New("invalid command type")
 	}
-
 	c.Result = c.Something
 
 	return nil

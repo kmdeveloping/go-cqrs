@@ -9,6 +9,7 @@ import (
 
 type IHandler interface {
 	ICommandHandler
+	ICommandWithResultHandler
 	IQueryHandler
 	IEventHandler
 	IValidatorHandler
@@ -16,6 +17,9 @@ type IHandler interface {
 
 type ICommandHandler interface {
 	Execute(TCommand command.ICommand) error
+}
+
+type ICommandWithResultHandler interface {
 	ExecuteWithResult(TCommandWithResult command.ICommandWithResult) error
 }
 
@@ -29,28 +33,4 @@ type IEventHandler interface {
 
 type IValidatorHandler interface {
 	Validate(TValidator validator.IValidator) error
-}
-
-type BaseHandler struct{}
-
-var _ IHandler = (*BaseHandler)(nil)
-
-func (h *BaseHandler) Execute(TCommand command.ICommand) error {
-	return nil
-}
-
-func (h *BaseHandler) ExecuteWithResult(TCommandWithResult command.ICommandWithResult) error {
-	return nil
-}
-
-func (h *BaseHandler) Get(TQuery query.IQuery) (interface{}, error) {
-	return nil, nil
-}
-
-func (h *BaseHandler) Publish(TEvent event.IEvent) error {
-	return nil
-}
-
-func (h *BaseHandler) Validate(TValidator validator.IValidator) error {
-	return nil
 }
