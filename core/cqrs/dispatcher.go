@@ -16,6 +16,7 @@ type ICqrsManager interface {
 	Validate(T validator.IValidator) error
 	UseLoggingDecorator() ICqrsManager
 	UseMetricsDecorator() ICqrsManager
+	UseErrorHandlerDecorator() ICqrsManager
 }
 
 type CqrsManager struct {
@@ -35,6 +36,11 @@ func (m *CqrsManager) UseLoggingDecorator() ICqrsManager {
 
 func (m *CqrsManager) UseMetricsDecorator() ICqrsManager {
 	m.config.enableMetricsDecorator = true
+	return m
+}
+
+func (m *CqrsManager) UseErrorHandlerDecorator() ICqrsManager {
+	m.config.enableErrorHandlerDecorator = true
 	return m
 }
 
@@ -103,6 +109,10 @@ func (m *CqrsManager) setup(T any) (handlers.IHandler, error) {
 
 	if m.config.enableMetricsDecorator {
 		handler = decorators.UseExecutionTimeDecorator(handler)
+	}
+
+	if m.config.enableErrorHandlerDecorator {
+		handler = decorators.UseErrorHandlerDecorator(handler)
 	}
 
 	return handler, nil

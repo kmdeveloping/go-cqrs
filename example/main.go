@@ -12,29 +12,16 @@ import (
 var dispatcher cqrs.ICqrsManager
 
 func init() {
-	commandHandlers := []registry.CommandServices{
-		{
-			Command: contracts.DoSomethingCommand{},
-			Handler: &handler.DoThatCommandHandler{},
-		},
-	}
-
-	queryHandlers := []registry.QueryServices{
-		{
-			Query:   contracts.GetNewUserQuery{},
-			Handler: &handler.GetNewUserQueryHandler{},
-		},
-	}
-
 	config := &cqrs.CqrsConfiguration{
 		Registry: registry.NewRegistry().
-			RegisterCommandHandlers(commandHandlers).
-			RegisterQueryHandlers(queryHandlers),
+			RegisterCommandHandlers(getCommandServices()).
+			RegisterQueryHandlers(getQueryServices()),
 	}
 
 	dispatcher = cqrs.NewCqrsManager(config)
 	dispatcher.UseLoggingDecorator()
 	dispatcher.UseMetricsDecorator()
+	dispatcher.UseErrorHandlerDecorator()
 }
 
 func main() {
@@ -53,4 +40,16 @@ func main() {
 	}
 
 	fmt.Println(r)
+}
+
+func getCommandServices() []registry.CommandServices {
+	return []registry.CommandServices{
+		{Command: contracts.DoSomethingCommand{}, Handler: &handler.DoThatCommandHandler{}},
+	}
+}
+
+func getQueryServices() []registry.QueryServices {
+	return []registry.QueryServices{
+		{Query: contracts.GetNewUserQuery{}, Handler: &handler.GetNewUserQueryHandler{}},
+	}
 }
