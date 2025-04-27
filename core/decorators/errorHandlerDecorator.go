@@ -14,8 +14,18 @@ type ErrorHandlerDecorator struct {
 
 var _ handlers.IHandler = (*ErrorHandlerDecorator)(nil)
 
-func (e ErrorHandlerDecorator) Run(TCommand command.ICommand) error {
-	err := e.next.Run(TCommand)
+func (e ErrorHandlerDecorator) Execute(TCommand command.ICommand) error {
+	err := e.next.Execute(TCommand)
+	if err != nil {
+		// do some handling stuff here
+		return err
+	}
+
+	return nil
+}
+
+func (e ErrorHandlerDecorator) ExecuteWithResult(TCommandWithResult command.ICommandWithResult) error {
+	err := e.next.Execute(TCommandWithResult)
 	if err != nil {
 		// do some handling stuff here
 		return err

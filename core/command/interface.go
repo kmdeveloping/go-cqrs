@@ -1,7 +1,9 @@
 package command
 
 type ICommand interface{}
+type ICommandWithResult interface{}
 
 type CommandBase struct{}
-
-var _ ICommand = (*CommandBase)(nil)
+type CommandWithResultBase[TResult any] struct {
+	Result TResult
+}

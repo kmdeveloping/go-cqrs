@@ -25,10 +25,18 @@ func init() {
 }
 
 func main() {
-	h := dispatcher.Execute(contracts.DoSomethingCommand{Something: "Hello"})
+	h := dispatcher.Execute(contracts.DoSomethingCommand{Something: "Hi"})
 	if h != nil {
 		return
 	}
+
+	cmd := contracts.DoSomethingWithResultCommand{Something: "Hello"}
+	err := dispatcher.ExecuteWithResult(cmd)
+	if err != nil {
+		return
+	}
+
+	fmt.Println(cmd.Result)
 
 	r, e := dispatcher.Get(contracts.GetNewUserQuery{
 		FirstName: "Kolten",
@@ -45,6 +53,7 @@ func main() {
 func getCommandServices() []registry.CommandServices {
 	return []registry.CommandServices{
 		{Command: contracts.DoSomethingCommand{}, Handler: &handler.DoThatCommandHandler{}},
+		{Command: contracts.DoSomethingWithResultCommand{}, Handler: &handler.DoThisCommandWithResultHandler{}},
 	}
 }
 

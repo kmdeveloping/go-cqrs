@@ -16,11 +16,23 @@ type ExecutionTimeDecorator struct {
 
 var _ handlers.IHandler = (*ExecutionTimeDecorator)(nil)
 
-func (e *ExecutionTimeDecorator) Run(TCommand command.ICommand) error {
+func (e *ExecutionTimeDecorator) Execute(TCommand command.ICommand) error {
 	start := time.Now()
 	log.Printf("Execution started @ %s\n", start.Format(time.RFC3339Nano))
 
-	cmd := e.next.Run(TCommand)
+	cmd := e.next.Execute(TCommand)
+
+	stop := time.Now()
+	log.Printf("Execution completed @ %s\t total time: %s\n", stop.Format(time.RFC3339Nano), stop.Sub(start).String())
+
+	return cmd
+}
+
+func (e *ExecutionTimeDecorator) ExecuteWithResult(TCommandWithResult command.ICommandWithResult) error {
+	start := time.Now()
+	log.Printf("Execution started @ %s\n", start.Format(time.RFC3339Nano))
+
+	cmd := e.next.Execute(TCommandWithResult)
 
 	stop := time.Now()
 	log.Printf("Execution completed @ %s\t total time: %s\n", stop.Format(time.RFC3339Nano), stop.Sub(start).String())

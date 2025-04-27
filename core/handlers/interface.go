@@ -9,17 +9,18 @@ import (
 
 type IHandler interface {
 	ICommandHandler
-	IQueryHandler[any]
+	IQueryHandler
 	IEventHandler
 	IValidatorHandler
 }
 
 type ICommandHandler interface {
-	Run(TCommand command.ICommand) error
+	Execute(TCommand command.ICommand) error
+	ExecuteWithResult(TCommandWithResult command.ICommandWithResult) error
 }
 
-type IQueryHandler[TResult any] interface {
-	Get(TQuery query.IQuery) (TResult, error)
+type IQueryHandler interface {
+	Get(TQuery query.IQuery) (interface{}, error)
 }
 
 type IEventHandler interface {
@@ -34,11 +35,15 @@ type BaseHandler struct{}
 
 var _ IHandler = (*BaseHandler)(nil)
 
-func (h *BaseHandler) Run(TCommand command.ICommand) error {
+func (h *BaseHandler) Execute(TCommand command.ICommand) error {
 	return nil
 }
 
-func (h *BaseHandler) Get(TQuery query.IQuery) (any, error) {
+func (h *BaseHandler) ExecuteWithResult(TCommandWithResult command.ICommandWithResult) error {
+	return nil
+}
+
+func (h *BaseHandler) Get(TQuery query.IQuery) (interface{}, error) {
 	return nil, nil
 }
 

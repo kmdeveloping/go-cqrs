@@ -11,6 +11,7 @@ import (
 
 type ICqrsManager interface {
 	Execute(T command.ICommand) error
+	ExecuteWithResult(T command.ICommandWithResult) error
 	Get(T query.IQuery) (any, error)
 	Publish(T event.IEvent) error
 	Validate(T validator.IValidator) error
@@ -50,7 +51,20 @@ func (m *CqrsManager) Execute(T command.ICommand) error {
 		return err
 	}
 
-	if err = handler.Run(T); err != nil {
+	if err = handler.Execute(T); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *CqrsManager) ExecuteWithResult(T command.ICommandWithResult) error {
+	handler, err := m.setup(T)
+	if err != nil {
+		return err
+	}
+
+	if err = handler.ExecuteWithResult(T); err != nil {
 		return err
 	}
 

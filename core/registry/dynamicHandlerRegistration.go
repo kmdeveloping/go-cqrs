@@ -14,7 +14,7 @@ import (
 
 type Registry struct {
 	commandHandlers  map[reflect.Type]handlers.ICommandHandler
-	queryHandlers    map[reflect.Type]handlers.IQueryHandler[any]
+	queryHandlers    map[reflect.Type]handlers.IQueryHandler
 	eventHandlers    map[reflect.Type][]handlers.IEventHandler
 	validateHandlers map[reflect.Type]handlers.IValidatorHandler
 }
@@ -26,7 +26,7 @@ type CommandServices struct {
 
 type QueryServices struct {
 	Query   query.IQuery
-	Handler handlers.IQueryHandler[any]
+	Handler handlers.IQueryHandler
 }
 
 type EventServices struct {
@@ -42,7 +42,7 @@ type ValidatorServices struct {
 func NewRegistry() *Registry {
 	return &Registry{
 		commandHandlers:  make(map[reflect.Type]handlers.ICommandHandler),
-		queryHandlers:    make(map[reflect.Type]handlers.IQueryHandler[any]),
+		queryHandlers:    make(map[reflect.Type]handlers.IQueryHandler),
 		eventHandlers:    make(map[reflect.Type][]handlers.IEventHandler),
 		validateHandlers: make(map[reflect.Type]handlers.IValidatorHandler),
 	}
@@ -79,6 +79,15 @@ func (r *Registry) RegisterValidatorHandlers(handlerList []ValidatorServices) *R
 func (r *Registry) Resolve(T any) (handlers.IHandler, error) {
 	t := reflect.TypeOf(T)
 	if cmd, _ := regexp.MatchString("Command", t.Name()); cmd {
+		handler, exists := r.commandHandlers[t]
+		if !exists {
+			return nil, errors.New("handler not registered for command: " + t.Name())
+		}
+
+		return handler.(handlers.IHandler), nil
+	}
+
+	if cwr, _ := regexp.MatchString("CommandWithResult", t.Name()); cwr {
 		handler, exists := r.commandHandlers[t]
 		if !exists {
 			return nil, errors.New("handler not registered for command: " + t.Name())

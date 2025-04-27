@@ -36,10 +36,16 @@ func (l *LoggingDecorator) Get(TQuery query.IQuery) (any, error) {
 	return l.next.Get(TQuery)
 }
 
-func (l *LoggingDecorator) Run(TCommand command.ICommand) error {
+func (l *LoggingDecorator) Execute(TCommand command.ICommand) error {
 	cmd := reflect.TypeOf(TCommand).Name()
 	l.logger.Printf("Executing command type %s\n", cmd)
-	return l.next.Run(TCommand)
+	return l.next.Execute(TCommand)
+}
+
+func (l *LoggingDecorator) ExecuteWithResult(TCommandWithResult command.ICommandWithResult) error {
+	cmd := reflect.TypeOf(TCommandWithResult).Name()
+	l.logger.Printf("Executing command type %s\n", cmd)
+	return l.next.Execute(TCommandWithResult)
 }
 
 func UseLoggingDecorator(handler handlers.IHandler) handlers.IHandler {

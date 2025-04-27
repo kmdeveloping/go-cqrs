@@ -13,7 +13,7 @@ type GetNewUserQueryHandler struct {
 	*handlers.BaseHandler
 }
 
-var _ handlers.IQueryHandler[any] = (*GetNewUserQueryHandler)(nil)
+var _ handlers.IQueryHandler = (*GetNewUserQueryHandler)(nil)
 
 func (q *GetNewUserQueryHandler) Get(qry query.IQuery) (any, error) {
 	qr, ok := qry.(contracts.GetNewUserQuery)

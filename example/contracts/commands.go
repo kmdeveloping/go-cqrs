@@ -6,3 +6,8 @@ type DoSomethingCommand struct {
 	*command.CommandBase
 	Something string
 }
+
+type DoSomethingWithResultCommand struct {
+	*command.CommandWithResultBase[string]
+	Something string
+}
