@@ -42,12 +42,6 @@ func (l *LoggingDecorator) Execute(TCommand command.ICommand) error {
 	return l.next.Execute(TCommand)
 }
 
-func (l *LoggingDecorator) ExecuteWithResult(TCommandWithResult command.ICommandWithResult) error {
-	cmd := reflect.TypeOf(TCommandWithResult).Name()
-	l.logger.Printf("Executing command type %s\n", cmd)
-	return l.next.Execute(TCommandWithResult)
-}
-
 func UseLoggingDecorator(handler handlers.IHandler) handlers.IHandler {
 	return &LoggingDecorator{next: handler, logger: log.Default()}
 }

@@ -28,18 +28,6 @@ func (e *ExecutionTimeDecorator) Execute(TCommand command.ICommand) error {
 	return cmd
 }
 
-func (e *ExecutionTimeDecorator) ExecuteWithResult(TCommandWithResult command.ICommandWithResult) error {
-	start := time.Now()
-	log.Printf("Execution started @ %s\n", start.Format(time.RFC3339Nano))
-
-	cmd := e.next.Execute(TCommandWithResult)
-
-	stop := time.Now()
-	log.Printf("Execution completed @ %s\t total time: %s\n", stop.Format(time.RFC3339Nano), stop.Sub(start).String())
-
-	return cmd
-}
-
 func (e *ExecutionTimeDecorator) Get(TQuery query.IQuery) (any, error) {
 	start := time.Now()
 	log.Printf("Execution started @ %s\n", start.Format(time.RFC3339Nano))

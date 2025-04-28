@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"errors"
 	"fmt"
-	"github.com/kmdeveloping/go-cqrs/core/command"
 	"github.com/kmdeveloping/go-cqrs/core/handlers"
 	"github.com/kmdeveloping/go-cqrs/example/contracts"
 )
@@ -11,29 +9,9 @@ import (
 type DoThatCommandHandler struct {
 }
 
-type DoThisCommandWithResultHandler struct {
-}
+var _ handlers.ICommandHandler[contracts.DoSomethingCommand] = (*DoThatCommandHandler)(nil)
 
-var _ handlers.ICommandHandler = (*DoThatCommandHandler)(nil)
-var _ handlers.ICommandWithResultHandler = (*DoThisCommandWithResultHandler)(nil)
-
-func (d *DoThatCommandHandler) Execute(command command.ICommand) error {
-	cmd, ok := command.(contracts.DoSomethingCommand)
-	if !ok {
-		return errors.New("invalid command type")
-	}
-
-	fmt.Println(cmd.Something)
-
-	return nil
-}
-
-func (d *DoThisCommandWithResultHandler) ExecuteWithResult(cmd command.ICommandWithResult) error {
-	c, ok := cmd.(contracts.DoSomethingWithResultCommand)
-	if !ok {
-		return errors.New("invalid command type")
-	}
-	c.Result = c.Something
-
+func (d *DoThatCommandHandler) Execute(command contracts.DoSomethingCommand) error {
+	fmt.Println(command.Something)
 	return nil
 }

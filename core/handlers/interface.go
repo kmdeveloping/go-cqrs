@@ -8,29 +8,24 @@ import (
 )
 
 type IHandler interface {
-	ICommandHandler
-	ICommandWithResultHandler
-	IQueryHandler
-	IEventHandler
-	IValidatorHandler
+	ICommandHandler[command.ICommand]
+	IQueryHandler[query.IQuery, any]
+	IEventHandler[event.IEvent]
+	IValidatorHandler[validator.IValidator]
 }
 
-type ICommandHandler interface {
-	Execute(TCommand command.ICommand) error
+type ICommandHandler[TCommand command.ICommand] interface {
+	Execute(TCommand) error
 }
 
-type ICommandWithResultHandler interface {
-	ExecuteWithResult(TCommandWithResult command.ICommandWithResult) error
+type IQueryHandler[TQuery query.IQuery, TResult any] interface {
+	Get(TQuery) (TResult, error)
 }
 
-type IQueryHandler interface {
-	Get(TQuery query.IQuery) (interface{}, error)
+type IEventHandler[TEvent event.IEvent] interface {
+	Publish(TEvent) error
 }
 
-type IEventHandler interface {
-	Publish(TEvent event.IEvent) error
-}
-
-type IValidatorHandler interface {
-	Validate(TValidator validator.IValidator) error
+type IValidatorHandler[TValidator validator.IValidator] interface {
+	Validate(TValidator) error
 }

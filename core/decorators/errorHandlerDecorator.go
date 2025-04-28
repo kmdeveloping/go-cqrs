@@ -24,16 +24,6 @@ func (e ErrorHandlerDecorator) Execute(TCommand command.ICommand) error {
 	return nil
 }
 
-func (e ErrorHandlerDecorator) ExecuteWithResult(TCommandWithResult command.ICommandWithResult) error {
-	err := e.next.Execute(TCommandWithResult)
-	if err != nil {
-		// do some handling stuff here
-		return err
-	}
-
-	return nil
-}
-
 func (e ErrorHandlerDecorator) Get(TQuery query.IQuery) (any, error) {
 	result, err := e.next.Get(TQuery)
 	if err != nil {

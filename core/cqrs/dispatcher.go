@@ -1,17 +1,20 @@
 package cqrs
 
 import (
+	"errors"
+	"fmt"
 	"github.com/kmdeveloping/go-cqrs/core/command"
 	"github.com/kmdeveloping/go-cqrs/core/decorators"
 	"github.com/kmdeveloping/go-cqrs/core/event"
 	"github.com/kmdeveloping/go-cqrs/core/handlers"
 	"github.com/kmdeveloping/go-cqrs/core/query"
+	"github.com/kmdeveloping/go-cqrs/core/registry"
 	"github.com/kmdeveloping/go-cqrs/core/validator"
+	"reflect"
 )
 
 type ICqrsManager interface {
-	Execute(T command.ICommand) error
-	ExecuteWithResult(T command.ICommandWithResult) error
+	Execute(cmd T) error
 	Get(T query.IQuery) (any, error)
 	Publish(T event.IEvent) error
 	Validate(T validator.IValidator) error
@@ -45,26 +48,27 @@ func (m *CqrsManager) UseErrorHandlerDecorator() ICqrsManager {
 	return m
 }
 
-func (m *CqrsManager) Execute(T command.ICommand) error {
-	handler, err := m.setup(T)
-	if err != nil {
-		return err
+func (m *CqrsManager) Execute(contract any) error {
+
+	t := reflect.TypeOf(contract).Out(0)
+	handler, ok := m.config.Handlers.Handlers.Load(t).(handlers.ICommandHandler[t])
+	if !ok {
+		return errors.New(fmt.Sprintf("handler not found for type %v", reflect.TypeOf(T)))
 	}
 
-	if err = handler.Execute(T); err != nil {
-		return err
+	if m.config.enableLoggingDecorator {
+		handler = decorators.UseLoggingDecorator(handler)
 	}
 
-	return nil
-}
-
-func (m *CqrsManager) ExecuteWithResult(T command.ICommandWithResult) error {
-	handler, err := m.setup(T)
-	if err != nil {
-		return err
+	if m.config.enableMetricsDecorator {
+		handler = decorators.UseExecutionTimeDecorator(handler)
 	}
 
-	if err = handler.ExecuteWithResult(T); err != nil {
+	if m.config.enableErrorHandlerDecorator {
+		handler = decorators.UseErrorHandlerDecorator(handler)
+	}
+
+	if err = handler.Execute(contract); err != nil {
 		return err
 	}
 
@@ -112,7 +116,7 @@ func (m *CqrsManager) Validate(T validator.IValidator) error {
 }
 
 func (m *CqrsManager) setup(T any) (handlers.IHandler, error) {
-	handler, err := m.config.Registry.Resolve(T)
+	handler, err := registry.LoadCommand[T](&m.config.Handlers)
 	if err != nil {
 		return nil, err
 	}

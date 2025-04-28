@@ -7,7 +7,4 @@ type DoSomethingCommand struct {
 	Something string
 }
 
-type DoSomethingWithResultCommand struct {
-	*command.CommandWithResultBase[string]
-	Something string
-}
+var _ command.ICommand = (*DoSomethingCommand)(nil)
