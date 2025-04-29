@@ -7,21 +7,21 @@ import (
 	"log"
 )
 
-var dispatch *cqrs.CqrsManager
+var dispatch *cqrs.Manager
 
 func init() {
-	config := &cqrs.CqrsConfiguration{}
+	config := &cqrs.Configuration{}
 	config.UseLoggingDecorator()
 	config.UseMetricsDecorator()
 	config.UseErrorHandlerDecorator()
 
 	dispatch = cqrs.NewCqrsManager(config)
 
-	cqrs.RegisterHandler(dispatch, &handler.DoThatCommandHandler{})
+	cqrs.RegisterCommandHandler(dispatch, &handler.DoThatCommandHandler{})
 }
 
 func main() {
-	err := cqrs.Execute(dispatch, contracts.DoSomethingCommand{Something: "Hello"})
+	err := cqrs.ExecuteCommand(dispatch, contracts.DoSomethingCommand{Something: "Hello"})
 	if err != nil {
 		log.Fatal(err)
 		return

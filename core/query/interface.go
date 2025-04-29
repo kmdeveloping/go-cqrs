@@ -3,6 +3,8 @@ package query
 type IQuery interface{}
 
 type IQueryHandler[T IQuery, R any] interface {
-	Get(T) (R, error)
+	Handle(T) (R, error)
 }
-type QueryBase struct{}
+type Base struct{}
+
+var _ IQuery = (*Base)(nil)

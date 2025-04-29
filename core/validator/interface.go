@@ -1,13 +1,7 @@
 package validator
 
-type IValidator interface{}
+import "github.com/kmdeveloping/go-cqrs/core/command"
 
-type IValidatorHandler[T IValidator] interface {
+type IValidatorHandler[T command.ICommand] interface {
 	Validate(T) error
 }
-
-type BaseValidatorHandler struct {
-	Valid bool
-}
-
-var _ IValidator = (*BaseValidatorHandler)(nil)

@@ -9,13 +9,13 @@ import (
 type IEvent interface{}
 
 type IEventHandler[T IEvent] interface {
-	Publish(T) error
+	Handle(event T) error
 }
 
-type EventBase struct {
+type Base struct {
 	ExecutionTime  time.Time
 	CorrelationUid uuid.UUID
 	MetaData       string
 }
 
-var _ IEvent = (*EventBase)(nil)
+var _ IEvent = (*Base)(nil)

@@ -6,4 +6,6 @@ type ICommand interface {
 type ICommandHandler[T ICommand] interface {
 	Handle(T) error
 }
-type CommandBase struct{}
+type Base struct{}
+
+var _ ICommand = (*Base)(nil)

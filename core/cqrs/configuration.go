@@ -6,23 +6,23 @@ type ICqrsConfiguration interface {
 	UseErrorHandlerDecorator() ICqrsConfiguration
 }
 
-type CqrsConfiguration struct {
+type Configuration struct {
 	enableErrorHandlerDecorator bool
 	enableLoggingDecorator      bool
 	enableMetricsDecorator      bool
 }
 
-func (c *CqrsConfiguration) UseLoggingDecorator() ICqrsConfiguration {
+func (c *Configuration) UseLoggingDecorator() ICqrsConfiguration {
 	c.enableLoggingDecorator = true
 	return c
 }
 
-func (c *CqrsConfiguration) UseMetricsDecorator() ICqrsConfiguration {
+func (c *Configuration) UseMetricsDecorator() ICqrsConfiguration {
 	c.enableMetricsDecorator = true
 	return c
 }
 
-func (c *CqrsConfiguration) UseErrorHandlerDecorator() ICqrsConfiguration {
+func (c *Configuration) UseErrorHandlerDecorator() ICqrsConfiguration {
 	c.enableErrorHandlerDecorator = true
 	return c
 }
