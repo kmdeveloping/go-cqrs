@@ -11,7 +11,7 @@ import (
 
 func ExecuteCommand[T command.ICommand](bus *Manager, cmd T) error {
 	typ := reflect.TypeOf(cmd)
-
+	fmt.Printf("%s\n", typ.Name())
 	// Run validators on command
 	bus.mu.RLock()
 	validators := bus.validators[typ]
