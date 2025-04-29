@@ -7,23 +7,29 @@ import (
 	"log"
 )
 
-var dispatch *cqrs.Manager
+var CqrsManager *cqrs.Manager
 
 func init() {
-	config := &cqrs.Configuration{}
-	config.UseLoggingDecorator()
-	config.UseMetricsDecorator()
-	config.UseErrorHandlerDecorator()
 
-	dispatch = cqrs.NewCqrsManager(config)
+	CqrsManager = cqrs.NewCqrsManager()
+	//CqrsManager.UseDefaultDecorators()
 
-	cqrs.RegisterCommandHandler(dispatch, &handler.DoThatCommandHandler{})
+	cqrs.RegisterCommandHandler(CqrsManager, &handler.DoThatCommandHandler{})
+	cqrs.RegisterQueryHandler(CqrsManager, &handler.GetNameQueryHandler{})
 }
 
 func main() {
-	err := cqrs.ExecuteCommand(dispatch, contracts.DoSomethingCommand{Something: "Hello"})
+	err := cqrs.ExecuteCommand(CqrsManager, contracts.DoSomethingCommand{Something: "Hello"})
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
+
+	result, err := cqrs.ExecuteQuery[contracts.GetNameQuery, contracts.GetNameQueryResponse](CqrsManager, contracts.GetNameQuery{ID: 987})
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	log.Println(result.UserName)
 }

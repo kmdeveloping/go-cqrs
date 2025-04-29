@@ -3,7 +3,6 @@ package cqrs
 import (
 	"fmt"
 	"github.com/kmdeveloping/go-cqrs/core/command"
-	"github.com/kmdeveloping/go-cqrs/core/decorators"
 	"github.com/kmdeveloping/go-cqrs/core/event"
 	"github.com/kmdeveloping/go-cqrs/core/query"
 	"github.com/kmdeveloping/go-cqrs/core/validator"
@@ -41,20 +40,6 @@ func ExecuteCommand[T command.ICommand](bus *Manager, cmd T) error {
 		return fmt.Errorf("handler type mismatch for %v", typ)
 	}
 
-	/// order decorators last is first to be called
-	/// call stack: metrics >> errorHandler >> logger >> handler method
-	if bus.config.enableLoggingDecorator {
-		typedHandler = decorators.UseLoggingDecorator(typedHandler)
-	}
-
-	if bus.config.enableErrorHandlerDecorator {
-		typedHandler = decorators.UseErrorHandlerDecorator(typedHandler)
-	}
-
-	if bus.config.enableMetricsDecorator {
-		typedHandler = decorators.UseExecutionTimeDecorator(typedHandler)
-	}
-
 	return typedHandler.Handle(cmd)
 }
 
@@ -73,20 +58,6 @@ func ExecuteQuery[T query.IQuery, R any](bus *Manager, qry T) (R, error) {
 		return zero, fmt.Errorf("query handler type mismatch for %T", qry)
 	}
 
-	/// order decorators last is first to be called
-	/// call stack: metrics >> errorHandler >> logger >> handler method
-	/*if bus.config.enableLoggingDecorator {
-		typedHandler = decorators.UseLoggingDecorator(typedHandler)
-	}
-
-	if bus.config.enableErrorHandlerDecorator {
-		typedHandler = decorators.UseErrorHandlerDecorator(typedHandler)
-	}
-
-	if bus.config.enableMetricsDecorator {
-		typedHandler = decorators.UseExecutionTimeDecorator(typedHandler)
-	}*/
-
 	return typedHandler.Handle(qry)
 }
 
@@ -102,20 +73,6 @@ func PublishEvent[T event.IEvent](bus *Manager, e T) error {
 		if !ok {
 			return fmt.Errorf("event handler type mismatch for %T", e)
 		}
-
-		/// order decorators last is first to be called
-		/// call stack: metrics >> errorHandler >> logger >> handler method
-		/*if bus.config.enableLoggingDecorator {
-			typedHandler = decorators.UseLoggingDecorator(typedHandler)
-		}
-
-		if bus.config.enableErrorHandlerDecorator {
-			typedHandler = decorators.UseErrorHandlerDecorator(typedHandler)
-		}
-
-		if bus.config.enableMetricsDecorator {
-			typedHandler = decorators.UseExecutionTimeDecorator(typedHandler)
-		}*/
 
 		if err := typedHandler.Handle(e); err != nil {
 			return err

@@ -1,26 +1,19 @@
 package decorators
 
 import (
-	"fmt"
-	"github.com/kmdeveloping/go-cqrs/core/command"
+	"context"
 )
 
-type ErrorHandlerDecorator[T command.ICommand] struct {
-	next command.ICommandHandler[T]
-}
+func ErrorHandlerDecorator() HandlerDecorator {
+	return func(next AnyHandler) AnyHandler {
+		return AnyHandlerFunc(func(ctx context.Context, message any) (any, error) {
+			t, err := next.Handle(ctx, message)
+			if err != nil {
+				// do some handling stuff here
+				return nil, err
+			}
 
-func (e *ErrorHandlerDecorator[T]) Handle(cmd T) error {
-	fmt.Printf("ErrorHandlerDecorator[%T]\n", cmd)
-
-	err := e.next.Handle(cmd)
-	if err != nil {
-		// do some handling stuff here
-		return err
+			return t, nil
+		})
 	}
-
-	return nil
-}
-
-func UseErrorHandlerDecorator[T command.ICommand](handler command.ICommandHandler[T]) command.ICommandHandler[T] {
-	return &ErrorHandlerDecorator[T]{next: handler}
 }

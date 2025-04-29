@@ -1,21 +1,15 @@
 package decorators
 
 import (
-	"github.com/kmdeveloping/go-cqrs/core/command"
+	"context"
 	"log"
-	"reflect"
 )
 
-type LoggingDecorator[T command.ICommand] struct {
-	logger *log.Logger
-	next   command.ICommandHandler[T]
-}
-
-func (l *LoggingDecorator[T]) Handle(cmd T) error {
-	l.logger.Printf("Executing command type %s\n", reflect.TypeOf(cmd).Name())
-	return l.next.Handle(cmd)
-}
-
-func UseLoggingDecorator[T command.ICommand](handler command.ICommandHandler[T]) command.ICommandHandler[T] {
-	return &LoggingDecorator[T]{next: handler, logger: log.Default()}
+func LoggingDecorator(logger *log.Logger) HandlerDecorator {
+	return func(next AnyHandler) AnyHandler {
+		return AnyHandlerFunc(func(ctx context.Context, message any) (any, error) {
+			logger.Printf("[Handler] %T => %+v", message, message)
+			return next.Handle(ctx, message)
+		})
+	}
 }
