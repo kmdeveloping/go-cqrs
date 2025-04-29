@@ -8,6 +8,10 @@ import (
 
 type IEvent interface{}
 
+type IEventHandler[T IEvent] interface {
+	Publish(T) error
+}
+
 type EventBase struct {
 	ExecutionTime  time.Time
 	CorrelationUid uuid.UUID

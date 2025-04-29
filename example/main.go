@@ -2,29 +2,28 @@ package main
 
 import (
 	"github.com/kmdeveloping/go-cqrs/core/cqrs"
-	"github.com/kmdeveloping/go-cqrs/core/registry"
 	"github.com/kmdeveloping/go-cqrs/example/contracts"
 	"github.com/kmdeveloping/go-cqrs/example/handler"
+	"log"
 )
 
-var dispatcher cqrs.ICqrsManager
+var dispatch *cqrs.CqrsManager
 
 func init() {
-	config := &cqrs.CqrsConfiguration{
-		Handlers: registry.NewRegistry(),
-	}
+	config := &cqrs.CqrsConfiguration{}
+	config.UseLoggingDecorator()
+	config.UseMetricsDecorator()
+	config.UseErrorHandlerDecorator()
 
-	registry.RegisterCommand[contracts.DoSomethingCommand](&handler.DoThatCommandHandler{}, &config.Handlers)
+	dispatch = cqrs.NewCqrsManager(config)
 
-	dispatcher = cqrs.NewCqrsManager(config)
-	dispatcher.UseLoggingDecorator()
-	dispatcher.UseMetricsDecorator()
-	dispatcher.UseErrorHandlerDecorator()
+	cqrs.RegisterHandler(dispatch, &handler.DoThatCommandHandler{})
 }
 
 func main() {
-	h := dispatcher.Execute(contracts.DoSomethingCommand{Something: "Hi"})
-	if h != nil {
+	err := cqrs.Execute(dispatch, contracts.DoSomethingCommand{Something: "Hello"})
+	if err != nil {
+		log.Fatal(err)
 		return
 	}
 }

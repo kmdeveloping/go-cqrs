@@ -1,137 +1,61 @@
 package cqrs
 
 import (
-	"errors"
 	"fmt"
 	"github.com/kmdeveloping/go-cqrs/core/command"
 	"github.com/kmdeveloping/go-cqrs/core/decorators"
-	"github.com/kmdeveloping/go-cqrs/core/event"
-	"github.com/kmdeveloping/go-cqrs/core/handlers"
-	"github.com/kmdeveloping/go-cqrs/core/query"
-	"github.com/kmdeveloping/go-cqrs/core/registry"
-	"github.com/kmdeveloping/go-cqrs/core/validator"
 	"reflect"
+	"sync"
 )
 
-type ICqrsManager interface {
-	Execute(cmd T) error
-	Get(T query.IQuery) (any, error)
-	Publish(T event.IEvent) error
-	Validate(T validator.IValidator) error
-	UseLoggingDecorator() ICqrsManager
-	UseMetricsDecorator() ICqrsManager
-	UseErrorHandlerDecorator() ICqrsManager
-}
-
 type CqrsManager struct {
-	config *CqrsConfiguration
+	config   *CqrsConfiguration
+	handlers map[reflect.Type]any
+	mu       sync.RWMutex
 }
 
-var _ ICqrsManager = (*CqrsManager)(nil)
-
-func NewCqrsManager(config *CqrsConfiguration) ICqrsManager {
-	return &CqrsManager{config: config}
+func NewCqrsManager(config *CqrsConfiguration) *CqrsManager {
+	return &CqrsManager{
+		config:   config,
+		handlers: make(map[reflect.Type]any),
+	}
 }
 
-func (m *CqrsManager) UseLoggingDecorator() ICqrsManager {
-	m.config.enableLoggingDecorator = true
-	return m
+func RegisterHandler[T command.ICommand](mgr *CqrsManager, handler command.ICommandHandler[T]) {
+	var zero T
+	typ := reflect.TypeOf(zero)
+	mgr.mu.Lock()
+	defer mgr.mu.Unlock()
+	mgr.handlers[typ] = handler
 }
 
-func (m *CqrsManager) UseMetricsDecorator() ICqrsManager {
-	m.config.enableMetricsDecorator = true
-	return m
-}
-
-func (m *CqrsManager) UseErrorHandlerDecorator() ICqrsManager {
-	m.config.enableErrorHandlerDecorator = true
-	return m
-}
-
-func (m *CqrsManager) Execute(contract any) error {
-
-	t := reflect.TypeOf(contract).Out(0)
-	handler, ok := m.config.Handlers.Handlers.Load(t).(handlers.ICommandHandler[t])
+func Execute[T command.ICommand](mgr *CqrsManager, cmd T) error {
+	typ := reflect.TypeOf(cmd)
+	mgr.mu.RLock()
+	handler, ok := mgr.handlers[typ]
+	mgr.mu.RUnlock()
 	if !ok {
-		return errors.New(fmt.Sprintf("handler not found for type %v", reflect.TypeOf(T)))
+		return fmt.Errorf("handler not found for type %v", typ)
 	}
 
-	if m.config.enableLoggingDecorator {
-		handler = decorators.UseLoggingDecorator(handler)
+	typedHandler, ok := handler.(command.ICommandHandler[T])
+	if !ok {
+		return fmt.Errorf("handler type mismatch for %v", typ)
 	}
 
-	if m.config.enableMetricsDecorator {
-		handler = decorators.UseExecutionTimeDecorator(handler)
+	/// order decorators last is first to be called
+	/// call stack: metrics >> errorHandler >> logger >> handler method
+	if mgr.config.enableLoggingDecorator {
+		typedHandler = decorators.UseLoggingDecorator(typedHandler)
 	}
 
-	if m.config.enableErrorHandlerDecorator {
-		handler = decorators.UseErrorHandlerDecorator(handler)
+	if mgr.config.enableErrorHandlerDecorator {
+		typedHandler = decorators.UseErrorHandlerDecorator(typedHandler)
 	}
 
-	if err = handler.Execute(contract); err != nil {
-		return err
+	if mgr.config.enableMetricsDecorator {
+		typedHandler = decorators.UseExecutionTimeDecorator(typedHandler)
 	}
 
-	return nil
-}
-
-func (m *CqrsManager) Get(T query.IQuery) (any, error) {
-	handler, err := m.setup(T)
-	if err != nil {
-		return nil, err
-	}
-
-	response, err := handler.Get(T)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-func (m *CqrsManager) Publish(T event.IEvent) error {
-	handler, err := m.setup(T)
-	if err != nil {
-		return err
-	}
-
-	if err = handler.Publish(T); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *CqrsManager) Validate(T validator.IValidator) error {
-	handler, err := m.setup(T)
-	if err != nil {
-		return err
-	}
-
-	if err = handler.Validate(T); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *CqrsManager) setup(T any) (handlers.IHandler, error) {
-	handler, err := registry.LoadCommand[T](&m.config.Handlers)
-	if err != nil {
-		return nil, err
-	}
-
-	if m.config.enableLoggingDecorator {
-		handler = decorators.UseLoggingDecorator(handler)
-	}
-
-	if m.config.enableMetricsDecorator {
-		handler = decorators.UseExecutionTimeDecorator(handler)
-	}
-
-	if m.config.enableErrorHandlerDecorator {
-		handler = decorators.UseErrorHandlerDecorator(handler)
-	}
-
-	return handler, nil
+	return typedHandler.Handle(cmd)
 }
