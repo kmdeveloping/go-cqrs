@@ -1,3 +1,5 @@
+//go:generate go run ../tools/gen-handler-registry/main.go
+
 package main
 
 import (
