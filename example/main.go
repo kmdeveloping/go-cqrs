@@ -5,24 +5,15 @@ import (
 
 	"github.com/kmdeveloping/go-cqrs/core/cqrs"
 	"github.com/kmdeveloping/go-cqrs/example/commands"
-	"github.com/kmdeveloping/go-cqrs/example/handler"
 	"github.com/kmdeveloping/go-cqrs/example/queries"
 )
 
 func init() {
-
-	cqrs.NewCqrsManager().UseDefaultDecorators()
-
-	cqrs.RegisterCqrsManager()
-	cqrs.RegisterCommandHandler(cqrs.NewHandler[handler.DoThatCommandHandler]())
-	cqrs.RegisterQueryHandler(cqrs.NewHandler[handler.GetNameQueryHandler]())
-	cqrs.RegisterEventHandler(&handler.SomeEventHandler{})
-	cqrs.RegisterEventHandler(&handler.SomeOtherEventHandler{})
-	cqrs.RegisterValidator(&handler.DoSomethingCommandValidator{})
+	BootstrapCqrs()
 }
 
 func main() {
-	err := cqrs.ExecuteCommand(commands.DoSomethingCommand{Something: "Hello Something it is nice to see you"})
+	err := cqrs.ExecuteCommand(commands.DoSomethingCommand{Something: "Helloooooo"})
 	if err != nil {
 		log.Fatal(err)
 		return

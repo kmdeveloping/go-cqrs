@@ -9,9 +9,7 @@ import (
 	"github.com/kmdeveloping/go-cqrs/example/events"
 )
 
-type DoThatCommandHandler struct {
-	*cqrs.HandlerBase
-}
+type DoThatCommandHandler struct{}
 
 var _ command.ICommandHandler[commands.DoSomethingCommand] = (*DoThatCommandHandler)(nil)
 

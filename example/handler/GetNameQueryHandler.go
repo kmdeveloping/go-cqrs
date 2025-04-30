@@ -3,13 +3,10 @@ package handler
 import (
 	"errors"
 
-	"github.com/kmdeveloping/go-cqrs/core/cqrs"
 	"github.com/kmdeveloping/go-cqrs/example/queries"
 )
 
-type GetNameQueryHandler struct {
-	*cqrs.HandlerBase
-}
+type GetNameQueryHandler struct{}
 
 func (h GetNameQueryHandler) Handle(qry queries.GetNameQuery) (queries.GetNameQueryResponse, error) {
 	if qry.ID >= 37 {

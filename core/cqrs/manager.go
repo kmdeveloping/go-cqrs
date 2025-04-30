@@ -36,7 +36,7 @@ func NewCqrsManager() *Manager {
 	return mgr
 }
 
-func (m *Manager) UseDefaultDecorators() {
+func (m *Manager) UseDefaultDecorators() *Manager {
 	logger := log.New(os.Stdout, "", log.LstdFlags)
 	loggingDecorator := decorators.LoggingDecorator(logger)
 	metricDecorator := decorators.MetricsDecorator()
@@ -52,31 +52,39 @@ func (m *Manager) UseDefaultDecorators() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.defaultDecorators = append(m.defaultDecorators, defaults...)
+
+	return m
 }
 
-func (m *Manager) AddLoggingDecorator() {
+func (m *Manager) AddLoggingDecorator() *Manager {
 	logger := log.New(os.Stdout, "", log.LstdFlags)
 	loggingDecorator := decorators.LoggingDecorator(logger)
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.defaultDecorators = append(m.defaultDecorators, loggingDecorator)
+
+	return m
 }
 
-func (m *Manager) AddMetricsDecorator() {
+func (m *Manager) AddMetricsDecorator() *Manager {
 	metricDecorator := decorators.MetricsDecorator()
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.defaultDecorators = append(m.defaultDecorators, metricDecorator)
+
+	return m
 }
 
-func (m *Manager) AddErrorHandlerDecorator() {
+func (m *Manager) AddErrorHandlerDecorator() *Manager {
 	errorHandlerDecorator := decorators.ErrorHandlerDecorator()
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.defaultDecorators = append(m.defaultDecorators, errorHandlerDecorator)
+
+	return m
 }
 
 func RegisterValidator[T command.ICommand](validator validator.IValidatorHandler[T]) {
