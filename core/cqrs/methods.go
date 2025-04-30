@@ -10,13 +10,13 @@ import (
 	"github.com/kmdeveloping/go-cqrs/core/validator"
 )
 
-func ExecuteCommand[T command.ICommand](bus *Manager, cmd T) error {
+func ExecuteCommand[T command.ICommand](cmd T) error {
 	typ := reflect.TypeOf(cmd)
 
 	// Run validators on command
-	bus.mu.RLock()
-	validators := bus.validators[typ]
-	bus.mu.RUnlock()
+	mgr.mu.RLock()
+	validators := mgr.validators[typ]
+	mgr.mu.RUnlock()
 
 	for _, v := range validators {
 		val, ok := v.(validator.IValidatorHandler[T])
@@ -29,9 +29,9 @@ func ExecuteCommand[T command.ICommand](bus *Manager, cmd T) error {
 	}
 
 	// Run command if validators pass
-	bus.mu.RLock()
-	handler, ok := bus.commandHandlers[typ]
-	bus.mu.RUnlock()
+	mgr.mu.RLock()
+	handler, ok := mgr.commandHandlers[typ]
+	mgr.mu.RUnlock()
 	if !ok {
 		return fmt.Errorf("handler not found for type %v", typ)
 	}
@@ -44,13 +44,13 @@ func ExecuteCommand[T command.ICommand](bus *Manager, cmd T) error {
 	return typedHandler.Handle(cmd)
 }
 
-func ExecuteQuery[T query.IQuery, R any](bus *Manager, qry T) (R, error) {
+func ExecuteQuery[T query.IQuery, R any](qry T) (R, error) {
 	var zero R
 	typ := reflect.TypeOf(qry)
 
-	bus.mu.RLock()
-	handler, ok := bus.queryHandlers[typ]
-	bus.mu.RUnlock()
+	mgr.mu.RLock()
+	handler, ok := mgr.queryHandlers[typ]
+	mgr.mu.RUnlock()
 	if !ok {
 		return zero, fmt.Errorf("no query handler for %T", qry)
 	}
@@ -63,12 +63,12 @@ func ExecuteQuery[T query.IQuery, R any](bus *Manager, qry T) (R, error) {
 	return typedHandler.Handle(qry)
 }
 
-func PublishEvent[T event.IEvent](bus *Manager, e T) error {
+func PublishEvent[T event.IEvent](e T) error {
 	typ := reflect.TypeOf(e)
 
-	bus.mu.RLock()
-	handlerList := bus.eventHandlers[typ]
-	bus.mu.RUnlock()
+	mgr.mu.RLock()
+	handlerList := mgr.eventHandlers[typ]
+	mgr.mu.RUnlock()
 
 	for _, h := range handlerList {
 		typedHandler, ok := h.(event.IEventHandler[T])

@@ -14,6 +14,8 @@ import (
 	"github.com/kmdeveloping/go-cqrs/core/validator"
 )
 
+var mgr *Manager
+
 type Manager struct {
 	commandHandlers   map[reflect.Type]any
 	queryHandlers     map[reflect.Type]any
@@ -24,12 +26,14 @@ type Manager struct {
 }
 
 func NewCqrsManager() *Manager {
-	return &Manager{
+	mgr = &Manager{
 		commandHandlers: make(map[reflect.Type]any),
 		queryHandlers:   make(map[reflect.Type]any),
 		eventHandlers:   make(map[reflect.Type][]any),
 		validators:      make(map[reflect.Type][]any),
 	}
+
+	return mgr
 }
 
 func (m *Manager) UseDefaultDecorators() {
@@ -75,62 +79,62 @@ func (m *Manager) AddErrorHandlerDecorator() {
 	m.defaultDecorators = append(m.defaultDecorators, errorHandlerDecorator)
 }
 
-func RegisterValidator[T command.ICommand](bus *Manager, validator validator.IValidatorHandler[T]) {
+func RegisterValidator[T command.ICommand](validator validator.IValidatorHandler[T]) {
 	var zero T
 	typ := reflect.TypeOf(zero)
 
-	bus.mu.Lock()
-	defer bus.mu.Unlock()
-	bus.validators[typ] = append(bus.validators[typ], validator)
+	mgr.mu.Lock()
+	defer mgr.mu.Unlock()
+	mgr.validators[typ] = append(mgr.validators[typ], validator)
 }
 
-func RegisterCommandHandler[T command.ICommand](bus *Manager, handler command.ICommandHandler[T]) {
+func RegisterCommandHandler[T command.ICommand](handler command.ICommandHandler[T]) {
 	var zero T
 	typ := reflect.TypeOf(zero)
 
 	base := decorators.WrapCommandHandler(handler)
-	decorated := decorators.WithDecorators(base, bus.defaultDecorators...)
+	decorated := decorators.WithDecorators(base, mgr.defaultDecorators...)
 
 	unwrapped, ok := decorators.UnwrapAsCommandHandler[T](decorated)
 	if !ok {
 		panic(fmt.Sprintf("failed to unwrap decorated handler for %T", typ))
 	}
 
-	bus.mu.Lock()
-	defer bus.mu.Unlock()
-	bus.commandHandlers[typ] = unwrapped
+	mgr.mu.Lock()
+	defer mgr.mu.Unlock()
+	mgr.commandHandlers[typ] = unwrapped
 }
 
-func RegisterQueryHandler[T query.IQuery, R any](bus *Manager, handler query.IQueryHandler[T, R]) {
+func RegisterQueryHandler[T query.IQuery, R any](handler query.IQueryHandler[T, R]) {
 	var zero T
 	typ := reflect.TypeOf(zero)
 
 	base := decorators.WrapQueryHandler(handler)
-	decorated := decorators.WithDecorators(base, bus.defaultDecorators...)
+	decorated := decorators.WithDecorators(base, mgr.defaultDecorators...)
 
 	unwrapped, ok := decorators.UnwrapAsQueryHandler[T, R](decorated)
 	if !ok {
 		panic(fmt.Sprintf("failed to unwrap decorated handler for %T", typ))
 	}
 
-	bus.mu.Lock()
-	defer bus.mu.Unlock()
-	bus.queryHandlers[typ] = unwrapped
+	mgr.mu.Lock()
+	defer mgr.mu.Unlock()
+	mgr.queryHandlers[typ] = unwrapped
 }
 
-func RegisterEventHandler[T event.IEvent](bus *Manager, handler event.IEventHandler[T]) {
+func RegisterEventHandler[T event.IEvent](handler event.IEventHandler[T]) {
 	var zero T
 	typ := reflect.TypeOf(zero)
 
 	base := decorators.WrapEventHandler(handler)
-	decorated := decorators.WithDecorators(base, bus.defaultDecorators...)
+	decorated := decorators.WithDecorators(base, mgr.defaultDecorators...)
 
 	unwrapped, ok := decorators.UnwrapAsEventHandler[T](decorated)
 	if !ok {
 		panic(fmt.Sprintf("failed to unwrap decorated handler for %T", typ))
 	}
 
-	bus.mu.Lock()
-	defer bus.mu.Unlock()
-	bus.eventHandlers[typ] = append(bus.eventHandlers[typ], unwrapped)
+	mgr.mu.Lock()
+	defer mgr.mu.Unlock()
+	mgr.eventHandlers[typ] = append(mgr.eventHandlers[typ], unwrapped)
 }

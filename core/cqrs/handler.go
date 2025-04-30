@@ -11,7 +11,7 @@ type HandlerBase struct {
 
 var base = &HandlerBase{}
 
-func RegisterCqrsManager(mgr *Manager) {
+func RegisterCqrsManager() {
 	base.Manager = mgr
 }
 

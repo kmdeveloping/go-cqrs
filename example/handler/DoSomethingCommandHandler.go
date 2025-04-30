@@ -18,7 +18,7 @@ var _ command.ICommandHandler[commands.DoSomethingCommand] = (*DoThatCommandHand
 func (d DoThatCommandHandler) Handle(command commands.DoSomethingCommand) error {
 	fmt.Println(command.Something)
 
-	return cqrs.PublishEvent(d.Manager, events.SomeEvent{
+	return cqrs.PublishEvent(events.SomeEvent{
 		Name: command.Something,
 	})
 }
