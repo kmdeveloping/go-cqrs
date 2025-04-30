@@ -23,10 +23,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	projectRoot = filepath.Dir(filepath.Dir(projectRoot)) // Go up two levels
+	//projectRoot = filepath.Dir(filepath.Dir(projectRoot)) // Go up two levels
 
 	// Path to handlers directory
-	handlersDir := filepath.Join(projectRoot, "example", "handlers")
+	handlersDir := filepath.Join(projectRoot, "handlers")
 
 	// Parse handlers
 	handlers, err := parseHandlers(handlersDir)
@@ -181,7 +181,7 @@ func generateCode(handlers []Handler, projectRoot string) error {
 	}
 
 	// Create output file
-	outFile := filepath.Join(projectRoot, "example", "startup.go")
+	outFile := filepath.Join(projectRoot, "startup.go")
 	f, err := os.Create(outFile)
 	if err != nil {
 		return err
