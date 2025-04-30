@@ -2,15 +2,16 @@ package cqrs
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"reflect"
+	"sync"
+
 	"github.com/kmdeveloping/go-cqrs/core/command"
 	"github.com/kmdeveloping/go-cqrs/core/decorators"
 	"github.com/kmdeveloping/go-cqrs/core/event"
 	"github.com/kmdeveloping/go-cqrs/core/query"
 	"github.com/kmdeveloping/go-cqrs/core/validator"
-	"log"
-	"os"
-	"reflect"
-	"sync"
 )
 
 type Manager struct {
@@ -47,6 +48,31 @@ func (m *Manager) UseDefaultDecorators() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.defaultDecorators = append(m.defaultDecorators, defaults...)
+}
+
+func (m *Manager) AddLoggingDecorator() {
+	logger := log.New(os.Stdout, "", log.LstdFlags)
+	loggingDecorator := decorators.LoggingDecorator(logger)
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.defaultDecorators = append(m.defaultDecorators, loggingDecorator)
+}
+
+func (m *Manager) AddMetricsDecorator() {
+	metricDecorator := decorators.MetricsDecorator()
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.defaultDecorators = append(m.defaultDecorators, metricDecorator)
+}
+
+func (m *Manager) AddErrorHandlerDecorator() {
+	errorHandlerDecorator := decorators.ErrorHandlerDecorator()
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.defaultDecorators = append(m.defaultDecorators, errorHandlerDecorator)
 }
 
 func RegisterValidator[T command.ICommand](bus *Manager, validator validator.IValidatorHandler[T]) {
