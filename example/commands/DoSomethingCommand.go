@@ -1,4 +1,4 @@
-package contracts
+package commands
 
 import "github.com/kmdeveloping/go-cqrs/core/command"
 

@@ -1,4 +1,4 @@
-package contracts
+package queries
 
 type GetNameQuery struct {
 	ID int

@@ -2,21 +2,22 @@ package handler
 
 import (
 	"errors"
+
 	"github.com/kmdeveloping/go-cqrs/core/cqrs"
-	"github.com/kmdeveloping/go-cqrs/example/contracts"
+	"github.com/kmdeveloping/go-cqrs/example/queries"
 )
 
 type GetNameQueryHandler struct {
 	*cqrs.HandlerBase
 }
 
-func (h GetNameQueryHandler) Handle(qry contracts.GetNameQuery) (contracts.GetNameQueryResponse, error) {
+func (h GetNameQueryHandler) Handle(qry queries.GetNameQuery) (queries.GetNameQueryResponse, error) {
 	if qry.ID >= 37 {
-		return contracts.GetNameQueryResponse{
+		return queries.GetNameQueryResponse{
 			ID:       qry.ID,
 			UserName: "YouHaveReturnedAQuery",
 		}, nil
 	}
 
-	return contracts.GetNameQueryResponse{}, errors.New("user id not found")
+	return queries.GetNameQueryResponse{}, errors.New("user id not found")
 }

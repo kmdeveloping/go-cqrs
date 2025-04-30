@@ -2,16 +2,17 @@ package cqrs
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/kmdeveloping/go-cqrs/core/command"
 	"github.com/kmdeveloping/go-cqrs/core/event"
 	"github.com/kmdeveloping/go-cqrs/core/query"
 	"github.com/kmdeveloping/go-cqrs/core/validator"
-	"reflect"
 )
 
 func ExecuteCommand[T command.ICommand](bus *Manager, cmd T) error {
 	typ := reflect.TypeOf(cmd)
-	fmt.Printf("%s\n", typ.Name())
+
 	// Run validators on command
 	bus.mu.RLock()
 	validators := bus.validators[typ]
@@ -46,6 +47,7 @@ func ExecuteCommand[T command.ICommand](bus *Manager, cmd T) error {
 func ExecuteQuery[T query.IQuery, R any](bus *Manager, qry T) (R, error) {
 	var zero R
 	typ := reflect.TypeOf(qry)
+
 	bus.mu.RLock()
 	handler, ok := bus.queryHandlers[typ]
 	bus.mu.RUnlock()

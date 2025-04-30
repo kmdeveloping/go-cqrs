@@ -1,4 +1,4 @@
-package contracts
+package events
 
 type SomeEvent struct {
 	Name string
