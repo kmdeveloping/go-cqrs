@@ -11,7 +11,8 @@ import (
 
 func init() {
 
-	cqrs.NewCqrsManager().UseDefaultDecorators()
+	m := cqrs.NewCqrsManager()
+	m.UseDefaultDecorators()
 
 	cqrs.RegisterCqrsManager()
 	cqrs.RegisterCommandHandler(cqrs.NewHandler[handler.DoThatCommandHandler]())
@@ -22,7 +23,7 @@ func init() {
 }
 
 func main() {
-	err := cqrs.ExecuteCommand(commands.DoSomethingCommand{Something: "Hello Something it is nice to see you"})
+	err := cqrs.ExecuteCommand(commands.DoSomethingCommand{Something: "Helloooooo"})
 	if err != nil {
 		log.Fatal(err)
 		return
