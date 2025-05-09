@@ -2,9 +2,10 @@ package decorators
 
 import (
 	"context"
-	"github.com/kmdeveloping/go-cqrs/core/command"
-	"github.com/kmdeveloping/go-cqrs/core/event"
-	"github.com/kmdeveloping/go-cqrs/core/query"
+
+	"github.com/kmdeveloping/go-cqrs/command"
+	"github.com/kmdeveloping/go-cqrs/event"
+	"github.com/kmdeveloping/go-cqrs/query"
 )
 
 type AnyHandlerFunc func(ctx context.Context, msg any) (any, error)

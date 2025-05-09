@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/kmdeveloping/go-cqrs/core/command"
-	"github.com/kmdeveloping/go-cqrs/core/event"
-	"github.com/kmdeveloping/go-cqrs/core/query"
-	"github.com/kmdeveloping/go-cqrs/core/validator"
+	"github.com/kmdeveloping/go-cqrs/command"
+	"github.com/kmdeveloping/go-cqrs/event"
+	"github.com/kmdeveloping/go-cqrs/query"
+	"github.com/kmdeveloping/go-cqrs/validator"
 )
 
 func ExecuteCommand[T command.ICommand](cmd T) error {

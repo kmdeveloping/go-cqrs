@@ -3,9 +3,10 @@ package decorators
 import (
 	"context"
 	"fmt"
-	"github.com/kmdeveloping/go-cqrs/core/command"
-	"github.com/kmdeveloping/go-cqrs/core/event"
-	"github.com/kmdeveloping/go-cqrs/core/query"
+
+	"github.com/kmdeveloping/go-cqrs/command"
+	"github.com/kmdeveloping/go-cqrs/event"
+	"github.com/kmdeveloping/go-cqrs/query"
 )
 
 func WithDecorators(base AnyHandler, d ...HandlerDecorator) AnyHandler {

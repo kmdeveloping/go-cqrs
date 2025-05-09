@@ -3,7 +3,7 @@ package handlers
 import (
 	"fmt"
 
-	"github.com/kmdeveloping/go-cqrs/core/event"
+	"github.com/kmdeveloping/go-cqrs/event"
 	"github.com/kmdeveloping/go-cqrs/example/events"
 )
 

@@ -33,7 +33,7 @@ go get github.com/kmdeveloping/go-cqrs
 ```go
 package commands
 
-import "github.com/kmdeveloping/go-cqrs/core/command"
+import "github.com/kmdeveloping/go-cqrs/command"
 
 type DoSomethingCommand struct {
     Something string
@@ -46,7 +46,7 @@ var _ command.ICommand = (*DoSomethingCommand)(nil)
 ```go
 package queries
 
-import "github.com/kmdeveloping/go-cqrs/core/query"
+import "github.com/kmdeveloping/go-cqrs/query"
 
 type GetNameQuery struct {
     ID string
@@ -59,7 +59,7 @@ var _ query.IQuery = (*GetNameQuery)(nil)
 ```go
 package events
 
-import "github.com/kmdeveloping/go-cqrs/core/event"
+import "github.com/kmdeveloping/go-cqrs/event"
 
 type SomeEvent struct {
     Message string
@@ -144,7 +144,7 @@ Initialize the CQRS manager in your application:
 ```go
 package main
 
-import "github.com/kmdeveloping/go-cqrs/core/cqrs"
+import "github.com/kmdeveloping/go-cqrs/cqrs"
 
 func main() {
     // Initialize CQRS manager
@@ -182,7 +182,7 @@ import (
     "fmt"
     "log"
     
-    "github.com/kmdeveloping/go-cqrs/core/cqrs"
+    "github.com/kmdeveloping/go-cqrs/cqrs"
     "github.com/kmdeveloping/go-cqrs/example/commands"
     "github.com/kmdeveloping/go-cqrs/example/events"
     "github.com/kmdeveloping/go-cqrs/example/queries"
@@ -235,7 +235,7 @@ You can create custom decorators to add cross-cutting concerns:
 ```go
 package mydecoratos
 
-import "github.com/kmdeveloping/go-cqrs/core/decorators"
+import "github.com/kmdeveloping/go-cqrs/decorators"
 
 func CustomDecorator() decorators.HandlerDecorator {
     return func(next decorators.HandlerFunc) decorators.HandlerFunc {
