@@ -23,12 +23,6 @@ func autoRegisterHandlers() {
 	types := getHandlerNames()
 	for _, typeName := range types {
 		switch typeName {
-		case "SomeEventHandler":
-			handler := &handlers.SomeEventHandler{}
-			cqrs.RegisterEventHandler(handler)
-		case "SomeOtherEventHandler":
-			handler := &handlers.SomeOtherEventHandler{}
-			cqrs.RegisterEventHandler(handler)
 		case "DoSomethingCommandValidator":
 			handler := &handlers.DoSomethingCommandValidator{}
 			cqrs.RegisterValidator(handler)
@@ -38,6 +32,12 @@ func autoRegisterHandlers() {
 		case "GetNameQueryHandler":
 			handler := &handlers.GetNameQueryHandler{}
 			cqrs.RegisterQueryHandler(handler)
+		case "SomeEventHandler":
+			handler := &handlers.SomeEventHandler{}
+			cqrs.RegisterEventHandler(handler)
+		case "SomeOtherEventHandler":
+			handler := &handlers.SomeOtherEventHandler{}
+			cqrs.RegisterEventHandler(handler)
 		default:
 			fmt.Printf("Unknown handler type: %s\n", typeName)
 		}
