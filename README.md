@@ -84,6 +84,17 @@ func (h *DoThatCommandHandler) Handle(cmd commands.DoSomethingCommand) error {
     // Handle the command
     return nil
 }
+
+type DoSomeCommandWithEventPublishingHandler struct {}
+
+func (h *DoSomeCommandWithEventPublishingHandler) Handle(cmd commands.DoSomeCommandWithEvent) error {
+    // handle the command
+
+    // events can be published within command and query handlers as well as from the main app
+    return cqrs.PublishEvent(events.SomeEventToPublish{
+        SomeParam: "I am an event"
+    })    
+}
 ```
 
 **Query Handler Example:**
