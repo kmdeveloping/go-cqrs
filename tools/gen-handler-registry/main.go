@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -17,29 +19,116 @@ type Handler struct {
 	ImportPath string
 }
 
+// Discover module path from go.mod file
+func getModulePath(projectRoot string) (string, error) {
+	modFile, err := os.ReadFile(filepath.Join(projectRoot, "go.mod"))
+	if err != nil {
+		return "", err
+	}
+
+	// Get first line and extract module path
+	lines := strings.Split(string(modFile), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "module ") {
+			return strings.TrimSpace(strings.TrimPrefix(line, "module ")), nil
+		}
+	}
+
+	return "", errors.New("could not determine module path from go.mod")
+}
+
+// findHandlersDir finds a directory named "handlers" (case insensitive) in the project root
+func findHandlersDir(projectRoot string) (string, error) {
+	var handlersDir string
+
+	err := filepath.WalkDir(projectRoot, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip hidden directories and common build directories
+		if d.IsDir() {
+			name := d.Name()
+			if name[0] == '.' || name == "vendor" || name == "node_modules" {
+				return filepath.SkipDir
+			}
+		}
+
+		// Check if it's a directory with a name that matches "handlers" case-insensitively
+		if d.IsDir() && strings.ToLower(d.Name()) == "handlers" {
+			rel, err := filepath.Rel(projectRoot, path)
+			if err == nil && rel != "." && !strings.HasPrefix(rel, "..") {
+				handlersDir = path
+				// Don't return filepath.SkipAll as it might not be available in all Go versions
+				// Continue search in case there are multiple handlers directories
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	if handlersDir == "" {
+		return "", errors.New("could not find handlers directory")
+	}
+
+	return handlersDir, nil
+}
+
 func main() {
-	// Get the project root (assuming this script is in tools/gen-handler-registry)
+	// Get the project root where the app is executed from
 	projectRoot, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Path to handlers directory
-	handlersDir := filepath.Join(projectRoot, "handlers")
+	// Find handlers directory (case insensitive)
+	handlersDir, err := findHandlersDir(projectRoot)
+	if err != nil {
+		log.Fatalf("Failed to find handlers directory: %v", err)
+	}
+
+	// Get module path
+	modulePath, err := getModulePath(projectRoot)
+	if err != nil {
+		log.Fatalf("Failed to determine module path: %v", err)
+	}
+
+	// Determine handlers import path
+	relHandlersPath, err := filepath.Rel(projectRoot, handlersDir)
+	if err != nil {
+		log.Fatalf("Failed to determine relative handlers path: %v", err)
+	}
+
+	// Convert Windows path separators to Go import path separator '/'
+	relHandlersPath = strings.ReplaceAll(relHandlersPath, "\\", "/")
+	handlersImportPath := modulePath
+	if relHandlersPath != "." {
+		handlersImportPath = modulePath + "/" + relHandlersPath
+	}
 
 	// Parse handlers
-	handlers, err := parseHandlers(handlersDir)
+	handlers, err := parseHandlers(handlersDir, handlersImportPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	if len(handlers) == 0 {
+		log.Fatalf("No handlers found in %s", handlersDir)
+	}
+
 	// Generate the code
-	if err := generateCode(handlers, projectRoot); err != nil {
+	if err := generateCode(handlers, projectRoot, handlersImportPath); err != nil {
 		log.Fatal(err)
 	}
+
+	log.Printf("Successfully generated handler registry at %s", filepath.Join(projectRoot, "registry_gen.go"))
 }
 
-func parseHandlers(dir string) ([]Handler, error) {
+func parseHandlers(dir string, importPath string) ([]Handler, error) {
 	var handlers []Handler
 
 	fset := token.NewFileSet()
@@ -61,7 +150,7 @@ func parseHandlers(dir string) ([]Handler, error) {
 									handlers = append(handlers, Handler{
 										Name:       name,
 										Type:       handlerType,
-										ImportPath: "github.com/kmdeveloping/go-cqrs/example/handlers",
+										ImportPath: importPath,
 									})
 								}
 							}
@@ -99,6 +188,10 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io/fs"
+	"log"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/kmdeveloping/go-cqrs/cqrs"
@@ -128,16 +221,73 @@ func autoRegisterHandlers() {
 	}
 }
 
+// findHandlersDir finds the "handlers" directory (case insensitive) in the project
+func findHandlersDir() string {
+	// Start with the current directory
+	dir, err := filepath.Abs(".")
+	if err != nil {
+		log.Printf("Warning: Failed to get absolute path: %v", err)
+		return "handlers" // Fall back to default
+	}
+	
+	// First try: the direct "handlers" directory
+	paths := []string{
+		"handlers",
+		"Handlers",
+	}
+	
+	for _, path := range paths {
+		if stat, err := fs.Stat(os.DirFS(dir), path); err == nil && stat.IsDir() {
+			return path
+		}
+	}
+	
+	// Second try: check subdirectories but only one level deep
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return "handlers" // Fall back to default if can't read directory
+	}
+	
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		
+		subdir := filepath.Join(dir, entry.Name())
+		subEntries, err := os.ReadDir(subdir)
+		if err != nil {
+			continue
+		}
+		
+		for _, subEntry := range subEntries {
+			if !subEntry.IsDir() {
+				continue
+			}
+			
+			if strings.ToLower(subEntry.Name()) == "handlers" {
+				return filepath.Join(entry.Name(), subEntry.Name())
+			}
+		}
+	}
+	
+	// Fall back to default if not found
+	return "handlers"
+}
+
 // getHandlerNames returns a list of handler type names by parsing Go files
 func getHandlerNames() []string {
 	var handlers []string
 
 	// Set up the file set
 	fset := token.NewFileSet()
+	
+	// Find handlers directory
+	handlersDir := findHandlersDir()
 
 	// Parse the handlers directory
-	pkgs, err := parser.ParseDir(fset, "handlers", nil, 0)
+	pkgs, err := parser.ParseDir(fset, handlersDir, nil, 0)
 	if err != nil {
+		log.Printf("Failed to parse handlers directory %s: %v", handlersDir, err)
 		return []string{}
 	}
 
@@ -167,7 +317,7 @@ func getHandlerNames() []string {
 }
 `
 
-func generateCode(handlers []Handler, projectRoot string) error {
+func generateCode(handlers []Handler, projectRoot string, handlersImportPath string) error {
 	tmpl, err := template.New("registry").Parse(codeTemplate)
 	if err != nil {
 		return err
@@ -186,7 +336,7 @@ func generateCode(handlers []Handler, projectRoot string) error {
 		ImportPath string
 	}{
 		Handlers:   handlers,
-		ImportPath: handlers[0].ImportPath,
+		ImportPath: handlersImportPath,
 	}
 
 	return tmpl.Execute(f, data)
