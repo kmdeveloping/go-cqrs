@@ -23,7 +23,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//projectRoot = filepath.Dir(filepath.Dir(projectRoot)) // Go up two levels
 
 	// Path to handlers directory
 	handlersDir := filepath.Join(projectRoot, "handlers")
