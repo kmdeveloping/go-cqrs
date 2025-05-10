@@ -1,34 +1,31 @@
+//go:generate go run ../tools/gen-handler-registry/main.go
+
 package main
 
 import (
-	"github.com/kmdeveloping/go-cqrs/core/cqrs"
-	"github.com/kmdeveloping/go-cqrs/core/registry"
-	"github.com/kmdeveloping/go-cqrs/example/contracts"
-	"github.com/kmdeveloping/go-cqrs/example/handler"
+	"log"
+
+	"github.com/kmdeveloping/go-cqrs/cqrs"
+	"github.com/kmdeveloping/go-cqrs/example/commands"
+	"github.com/kmdeveloping/go-cqrs/example/queries"
 )
 
-var dispatcher cqrs.ICqrsManager
-
 func init() {
-
-	services := []registry.Service{
-		{
-			TContract: contracts.DoSomethingCommand{},
-			THandler:  &handler.DoThatCommandHandler{},
-		},
-	}
-
-	config := &cqrs.CqrsConfiguration{
-		Registry:               registry.NewRegistry().RegisterHandlers(services),
-		EnableLoggingDecorator: true,
-	}
-
-	dispatcher = cqrs.NewCqrsManager(config)
+	BootstrapCqrs()
 }
 
 func main() {
-	h := dispatcher.Execute(contracts.DoSomethingCommand{Something: "Hello"})
-	if h != nil {
+	err := cqrs.ExecuteCommand(commands.DoSomethingCommand{Something: "Helloooooo"})
+	if err != nil {
+		log.Fatal(err)
 		return
 	}
+
+	result, er := cqrs.ExecuteQuery[queries.GetNameQuery, queries.GetNameQueryResponse](queries.GetNameQuery{ID: 987})
+	if er != nil {
+		log.Fatal(er)
+		return
+	}
+
+	log.Println(result.UserName)
 }
