@@ -5,7 +5,7 @@ package main
 import (
 	"log"
 
-	"github.com/kmdeveloping/go-cqrs/core/cqrs"
+	"github.com/kmdeveloping/go-cqrs/cqrs"
 	"github.com/kmdeveloping/go-cqrs/example/commands"
 	"github.com/kmdeveloping/go-cqrs/example/queries"
 )

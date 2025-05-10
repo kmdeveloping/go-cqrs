@@ -9,7 +9,7 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/kmdeveloping/go-cqrs/core/cqrs"
+	"github.com/kmdeveloping/go-cqrs/cqrs"
 	"github.com/kmdeveloping/go-cqrs/example/handlers"
 )
 
