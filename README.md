@@ -235,15 +235,27 @@ You can create custom decorators to add cross-cutting concerns:
 ```go
 package mydecoratos
 
-import "github.com/kmdeveloping/go-cqrs/decorators"
+import (
+    "context"
+    "github.com/kmdeveloping/go-cqrs/decorators"
+)
 
 func CustomDecorator() decorators.HandlerDecorator {
-    return func(next decorators.HandlerFunc) decorators.HandlerFunc {
-        return func(msg interface{}) (interface{}, error) {
-            // Do something before
-            result, err := next(msg)
-            // Do something after
-            return result, err
+    return func(next decorators.AnyHandler) decorators.AnyHandler {
+        return decorators.AnyHandlerFunc(ctx context.Context, message any) (any, error) {
+            // start your decorators actions here
+            // this logic will run before the base handler is run
+
+            // return the next decorator in line
+            // return next.Handle(ctx, message)
+
+            // if your decorator needs to evaluate the base handler response then you can split the 
+            // next call by assigning variables to the handle call which returns (any, error)
+            // response, err := next.Handle(ctx, message)
+
+            // do something with the response var if needed 
+            // return the outputs after your logic completes so other decorators can complete their action
+            // return response, err
         }
     }
 }
