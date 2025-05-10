@@ -8,9 +8,9 @@ import (
 	"github.com/kmdeveloping/go-cqrs/query"
 )
 
-type AnyHandlerFunc func(ctx context.Context, msg any) (any, error)
+type HandlerDecoratorFunc func(ctx context.Context, msg any) (any, error)
 
-func (f AnyHandlerFunc) Handle(ctx context.Context, msg any) (any, error) { return f(ctx, msg) }
+func (f HandlerDecoratorFunc) Handle(ctx context.Context, msg any) (any, error) { return f(ctx, msg) }
 
 type commandHandlerFunc[T command.ICommand] func(T) error
 

@@ -11,7 +11,11 @@ import (
 )
 
 func init() {
-	BootstrapCqrs()
+	m := cqrs.NewCqrsManager()
+	m.AddMetricsDecorator()
+	m.AddLoggingDecorator()
+
+	autoRegisterHandlers()
 }
 
 func main() {

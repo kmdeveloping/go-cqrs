@@ -13,16 +13,13 @@ import (
 	"github.com/kmdeveloping/go-cqrs/example/handlers"
 )
 
-func BootstrapCqrs() {
-	m := cqrs.NewCqrsManager()
-	m.UseDefaultDecorators()
-	autoRegisterHandlers()
-}
-
 func autoRegisterHandlers() {
 	types := getHandlerNames()
 	for _, typeName := range types {
 		switch typeName {
+		case "SomeOtherEventHandler":
+			handler := &handlers.SomeOtherEventHandler{}
+			cqrs.RegisterEventHandler(handler)
 		case "DoSomethingCommandValidator":
 			handler := &handlers.DoSomethingCommandValidator{}
 			cqrs.RegisterValidator(handler)
@@ -34,9 +31,6 @@ func autoRegisterHandlers() {
 			cqrs.RegisterQueryHandler(handler)
 		case "SomeEventHandler":
 			handler := &handlers.SomeEventHandler{}
-			cqrs.RegisterEventHandler(handler)
-		case "SomeOtherEventHandler":
-			handler := &handlers.SomeOtherEventHandler{}
 			cqrs.RegisterEventHandler(handler)
 		default:
 			fmt.Printf("Unknown handler type: %s\n", typeName)

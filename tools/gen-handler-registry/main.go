@@ -105,12 +105,6 @@ import (
 	"{{ .ImportPath }}"
 )
 
-func BootstrapCqrs() {
-	m := cqrs.NewCqrsManager()
-	m.UseDefaultDecorators()
-	autoRegisterHandlers()
-}
-
 func autoRegisterHandlers() {
 	types := getHandlerNames()
 	for _, typeName := range types {
@@ -180,7 +174,7 @@ func generateCode(handlers []Handler, projectRoot string) error {
 	}
 
 	// Create output file
-	outFile := filepath.Join(projectRoot, "startup.go")
+	outFile := filepath.Join(projectRoot, "registry_gen.go")
 	f, err := os.Create(outFile)
 	if err != nil {
 		return err

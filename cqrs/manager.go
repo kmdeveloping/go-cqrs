@@ -36,26 +36,6 @@ func NewCqrsManager() *Manager {
 	return mgr
 }
 
-func (m *Manager) UseDefaultDecorators() *Manager {
-	logger := log.New(os.Stdout, "", log.LstdFlags)
-	loggingDecorator := decorators.LoggingDecorator(logger)
-	metricDecorator := decorators.MetricsDecorator()
-	errorHandlerDecorator := decorators.ErrorHandlerDecorator()
-
-	/// indexing layers decorators as 0 => most outer decorator to N => most inner decorator before func call
-	defaults := []decorators.HandlerDecorator{
-		metricDecorator,
-		loggingDecorator,
-		errorHandlerDecorator,
-	}
-
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.decorators = append(m.decorators, defaults...)
-
-	return m
-}
-
 func (m *Manager) AddLoggingDecorator() *Manager {
 	logger := log.New(os.Stdout, "", log.LstdFlags)
 	loggingDecorator := decorators.LoggingDecorator(logger)
@@ -73,16 +53,6 @@ func (m *Manager) AddMetricsDecorator() *Manager {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.decorators = append(m.decorators, metricDecorator)
-
-	return m
-}
-
-func (m *Manager) AddErrorHandlerDecorator() *Manager {
-	errorHandlerDecorator := decorators.ErrorHandlerDecorator()
-
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.decorators = append(m.decorators, errorHandlerDecorator)
 
 	return m
 }

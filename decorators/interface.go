@@ -2,8 +2,8 @@ package decorators
 
 import "context"
 
-type AnyHandler interface {
+type IHandlerDecorator interface {
 	Handle(ctx context.Context, msg any) (any, error)
 }
 
-type HandlerDecorator func(next AnyHandler) AnyHandler
+type HandlerDecorator func(next IHandlerDecorator) IHandlerDecorator
