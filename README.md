@@ -157,22 +157,19 @@ package main
 
 import "github.com/kmdeveloping/go-cqrs/cqrs"
 
-func main() {
+func init() {
     // Initialize CQRS manager
     manager := cqrs.NewCqrsManager()
     
-    // Add default decorators (metrics, logging, error handling)
-    manager.UseDefaultDecorators()
-    
-    // Or add specific decorators
+    // Add default decorators (metrics, logging, error handling)    
     // manager.AddLoggingDecorator()
     // manager.AddMetricsDecorator()
-    // manager.AddErrorHandlerDecorator()
+
+    // Or add custom decorators
+    // manager.AddDecorator(myCustomDecorator.SomeDecorator())
     
     // Register handlers manually or use auto-registration
     RegisterHandlers()
-    
-    // Your application code...
 }
 
 func RegisterHandlers() {
@@ -234,7 +231,7 @@ This project includes a code generation tool to automatically register handlers:
 
 Example:
 ```go
-//go:generate go run ../tools/gen-handler-registry/main.go -dir ./handlers -output ./startup.go
+//go:generate go run ../tools/gen-handler-registry/main.go
 ```
 
 ## Advanced Usage

@@ -15,7 +15,7 @@ func init() {
 	m.AddMetricsDecorator()
 	m.AddLoggingDecorator()
 
-	autoRegisterHandlers()
+	registerHandlers()
 }
 
 func main() {

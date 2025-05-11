@@ -3,136 +3,15 @@
 package main
 
 import (
-	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/token"
-	"io/fs"
-	"log"
-	"os"
-	"path/filepath"
-	"strings"
-
 	"github.com/kmdeveloping/go-cqrs/cqrs"
 	"github.com/kmdeveloping/go-cqrs/example/handlers"
 )
 
-func autoRegisterHandlers() {
-	types := getHandlerNames()
-	for _, typeName := range types {
-		switch typeName {
-		case "DoThatCommandHandler":
-			handler := &handlers.DoThatCommandHandler{}
-			cqrs.RegisterCommandHandler(handler)
-		case "GetNameQueryHandler":
-			handler := &handlers.GetNameQueryHandler{}
-			cqrs.RegisterQueryHandler(handler)
-		case "SomeEventHandler":
-			handler := &handlers.SomeEventHandler{}
-			cqrs.RegisterEventHandler(handler)
-		case "SomeOtherEventHandler":
-			handler := &handlers.SomeOtherEventHandler{}
-			cqrs.RegisterEventHandler(handler)
-		case "DoSomethingCommandValidator":
-			handler := &handlers.DoSomethingCommandValidator{}
-			cqrs.RegisterValidator(handler)
-		default:
-			fmt.Printf("Unknown handler type: %s\n", typeName)
-		}
-	}
-}
-
-// findHandlersDir finds the "handlers" directory (case insensitive) in the project
-func findHandlersDir() string {
-	// Start with the current directory
-	dir, err := filepath.Abs(".")
-	if err != nil {
-		log.Printf("Warning: Failed to get absolute path: %v", err)
-		return "handlers" // Fall back to default
-	}
-	
-	// First try: the direct "handlers" directory
-	paths := []string{
-		"handlers",
-		"Handlers",
-	}
-	
-	for _, path := range paths {
-		if stat, err := fs.Stat(os.DirFS(dir), path); err == nil && stat.IsDir() {
-			return path
-		}
-	}
-	
-	// Second try: check subdirectories but only one level deep
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return "handlers" // Fall back to default if can't read directory
-	}
-	
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
-		
-		subdir := filepath.Join(dir, entry.Name())
-		subEntries, err := os.ReadDir(subdir)
-		if err != nil {
-			continue
-		}
-		
-		for _, subEntry := range subEntries {
-			if !subEntry.IsDir() {
-				continue
-			}
-			
-			if strings.ToLower(subEntry.Name()) == "handlers" {
-				return filepath.Join(entry.Name(), subEntry.Name())
-			}
-		}
-	}
-	
-	// Fall back to default if not found
-	return "handlers"
-}
-
-// getHandlerNames returns a list of handler type names by parsing Go files
-func getHandlerNames() []string {
-	var handlers []string
-
-	// Set up the file set
-	fset := token.NewFileSet()
-	
-	// Find handlers directory
-	handlersDir := findHandlersDir()
-
-	// Parse the handlers directory
-	pkgs, err := parser.ParseDir(fset, handlersDir, nil, 0)
-	if err != nil {
-		log.Printf("Failed to parse handlers directory %s: %v", handlersDir, err)
-		return []string{}
-	}
-
-	// Iterate through all packages
-	for _, pkg := range pkgs {
-		// Iterate through all files in the package
-		for _, file := range pkg.Files {
-			// Look for type declarations
-			for _, decl := range file.Decls {
-				if genDecl, ok := decl.(*ast.GenDecl); ok {
-					for _, spec := range genDecl.Specs {
-						if typeSpec, ok := spec.(*ast.TypeSpec); ok {
-							typeName := typeSpec.Name.Name
-							// Only add types that end with Handler or Validator
-							if strings.HasSuffix(typeName, "Handler") ||
-								strings.HasSuffix(typeName, "Validator") {
-								handlers = append(handlers, typeName)
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return handlers
+func registerHandlers() {
+	// Register handlers
+	cqrs.RegisterEventHandler(&handlers.SomeEventHandler{})
+	cqrs.RegisterEventHandler(&handlers.SomeOtherEventHandler{})
+	cqrs.RegisterValidator(&handlers.DoSomethingCommandValidator{})
+	cqrs.RegisterCommandHandler(&handlers.DoThatCommandHandler{})
+	cqrs.RegisterQueryHandler(&handlers.GetNameQueryHandler{})
 }
