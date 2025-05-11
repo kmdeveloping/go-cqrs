@@ -9,9 +9,9 @@ import (
 
 func registerHandlers() {
 	// Register handlers
-	cqrs.RegisterEventHandler(&handlers.SomeEventHandler{})
-	cqrs.RegisterEventHandler(&handlers.SomeOtherEventHandler{})
 	cqrs.RegisterValidator(&handlers.DoSomethingCommandValidator{})
 	cqrs.RegisterCommandHandler(&handlers.DoThatCommandHandler{})
 	cqrs.RegisterQueryHandler(&handlers.GetNameQueryHandler{})
+	cqrs.RegisterEventHandler(&handlers.SomeEventHandler{})
+	cqrs.RegisterEventHandler(&handlers.SomeOtherEventHandler{})
 }
