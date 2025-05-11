@@ -84,6 +84,17 @@ func (h *DoThatCommandHandler) Handle(cmd commands.DoSomethingCommand) error {
     // Handle the command
     return nil
 }
+
+type DoSomeCommandWithEventPublishingHandler struct {}
+
+func (h *DoSomeCommandWithEventPublishingHandler) Handle(cmd commands.DoSomeCommandWithEvent) error {
+    // handle the command
+
+    // events can be published within command and query handlers as well as from the main app
+    return cqrs.PublishEvent(events.SomeEventToPublish{
+        SomeParam: "I am an event"
+    })    
+}
 ```
 
 **Query Handler Example:**
@@ -146,22 +157,19 @@ package main
 
 import "github.com/kmdeveloping/go-cqrs/cqrs"
 
-func main() {
+func init() {
     // Initialize CQRS manager
     manager := cqrs.NewCqrsManager()
     
-    // Add default decorators (metrics, logging, error handling)
-    manager.UseDefaultDecorators()
-    
-    // Or add specific decorators
+    // Add default decorators (metrics, logging, error handling)    
     // manager.AddLoggingDecorator()
     // manager.AddMetricsDecorator()
-    // manager.AddErrorHandlerDecorator()
+
+    // Or add custom decorators
+    // manager.AddDecorator(myCustomDecorator.SomeDecorator())
     
     // Register handlers manually or use auto-registration
     RegisterHandlers()
-    
-    // Your application code...
 }
 
 func RegisterHandlers() {
@@ -223,7 +231,7 @@ This project includes a code generation tool to automatically register handlers:
 
 Example:
 ```go
-//go:generate go run ../tools/gen-handler-registry/main.go -dir ./handlers -output ./startup.go
+//go:generate go run ../tools/gen-handler-registry/main.go
 ```
 
 ## Advanced Usage
@@ -235,15 +243,27 @@ You can create custom decorators to add cross-cutting concerns:
 ```go
 package mydecoratos
 
-import "github.com/kmdeveloping/go-cqrs/decorators"
+import (
+    "context"
+    "github.com/kmdeveloping/go-cqrs/decorators"
+)
 
 func CustomDecorator() decorators.HandlerDecorator {
-    return func(next decorators.HandlerFunc) decorators.HandlerFunc {
-        return func(msg interface{}) (interface{}, error) {
-            // Do something before
-            result, err := next(msg)
-            // Do something after
-            return result, err
+    return func(next decorators.IHandlerDecorator) decorators.IHandlerDecorator {
+        return decorators.HandlerDecoratorFunc(ctx context.Context, message any) (any, error) {
+            // start your decorators actions here
+            // this logic will run before the base handler is run
+
+            // return the next decorator in line
+            // return next.Handle(ctx, message)
+
+            // if your decorator needs to evaluate the base handler response then you can split the 
+            // next call by assigning variables to the handle call which returns (any, error)
+            // response, err := next.Handle(ctx, message)
+
+            // do something with the response var if needed 
+            // return the outputs after your logic completes so other decorators can complete their action
+            // return response, err
         }
     }
 }

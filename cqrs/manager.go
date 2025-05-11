@@ -17,12 +17,12 @@ import (
 var mgr *Manager
 
 type Manager struct {
-	commandHandlers   map[reflect.Type]any
-	queryHandlers     map[reflect.Type]any
-	eventHandlers     map[reflect.Type][]any
-	validators        map[reflect.Type][]any
-	defaultDecorators []decorators.HandlerDecorator
-	mu                sync.RWMutex
+	commandHandlers map[reflect.Type]any
+	queryHandlers   map[reflect.Type]any
+	eventHandlers   map[reflect.Type][]any
+	validators      map[reflect.Type][]any
+	decorators      []decorators.HandlerDecorator
+	mu              sync.RWMutex
 }
 
 func NewCqrsManager() *Manager {
@@ -36,33 +36,13 @@ func NewCqrsManager() *Manager {
 	return mgr
 }
 
-func (m *Manager) UseDefaultDecorators() *Manager {
-	logger := log.New(os.Stdout, "", log.LstdFlags)
-	loggingDecorator := decorators.LoggingDecorator(logger)
-	metricDecorator := decorators.MetricsDecorator()
-	errorHandlerDecorator := decorators.ErrorHandlerDecorator()
-
-	/// indexing layers decorators as 0 => most outer decorator to N => most inner decorator before func call
-	defaults := []decorators.HandlerDecorator{
-		metricDecorator,
-		loggingDecorator,
-		errorHandlerDecorator,
-	}
-
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.defaultDecorators = append(m.defaultDecorators, defaults...)
-
-	return m
-}
-
 func (m *Manager) AddLoggingDecorator() *Manager {
 	logger := log.New(os.Stdout, "", log.LstdFlags)
 	loggingDecorator := decorators.LoggingDecorator(logger)
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.defaultDecorators = append(m.defaultDecorators, loggingDecorator)
+	m.decorators = append(m.decorators, loggingDecorator)
 
 	return m
 }
@@ -72,17 +52,15 @@ func (m *Manager) AddMetricsDecorator() *Manager {
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.defaultDecorators = append(m.defaultDecorators, metricDecorator)
+	m.decorators = append(m.decorators, metricDecorator)
 
 	return m
 }
 
-func (m *Manager) AddErrorHandlerDecorator() *Manager {
-	errorHandlerDecorator := decorators.ErrorHandlerDecorator()
-
+func (m *Manager) AddDecorator(decorator decorators.HandlerDecorator) *Manager {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.defaultDecorators = append(m.defaultDecorators, errorHandlerDecorator)
+	m.decorators = append(m.decorators, decorator)
 
 	return m
 }
@@ -101,7 +79,7 @@ func RegisterCommandHandler[T command.ICommand](handler command.ICommandHandler[
 	typ := reflect.TypeOf(zero)
 
 	base := decorators.WrapCommandHandler(handler)
-	decorated := decorators.WithDecorators(base, mgr.defaultDecorators...)
+	decorated := decorators.WithDecorators(base, mgr.decorators...)
 
 	unwrapped, ok := decorators.UnwrapAsCommandHandler[T](decorated)
 	if !ok {
@@ -118,7 +96,7 @@ func RegisterQueryHandler[T query.IQuery, R any](handler query.IQueryHandler[T, 
 	typ := reflect.TypeOf(zero)
 
 	base := decorators.WrapQueryHandler(handler)
-	decorated := decorators.WithDecorators(base, mgr.defaultDecorators...)
+	decorated := decorators.WithDecorators(base, mgr.decorators...)
 
 	unwrapped, ok := decorators.UnwrapAsQueryHandler[T, R](decorated)
 	if !ok {
@@ -135,8 +113,7 @@ func RegisterEventHandler[T event.IEvent](handler event.IEventHandler[T]) {
 	typ := reflect.TypeOf(zero)
 
 	base := decorators.WrapEventHandler(handler)
-	decorated := decorators.WithDecorators(base, mgr.defaultDecorators...)
-
+	decorated := decorators.WithDecorators(base, mgr.decorators...)
 	unwrapped, ok := decorators.UnwrapAsEventHandler[T](decorated)
 	if !ok {
 		panic(fmt.Sprintf("failed to unwrap decorated handler for %T", typ))

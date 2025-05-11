@@ -7,8 +7,8 @@ import (
 )
 
 func MetricsDecorator() HandlerDecorator {
-	return func(next AnyHandler) AnyHandler {
-		return AnyHandlerFunc(func(ctx context.Context, message any) (any, error) {
+	return func(next IHandlerDecorator) IHandlerDecorator {
+		return HandlerDecoratorFunc(func(ctx context.Context, message any) (any, error) {
 			start := time.Now()
 			log.Printf("Execution started @ %s\n", start.Format(time.RFC3339Nano))
 
