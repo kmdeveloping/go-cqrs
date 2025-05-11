@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type IEvent interface{}
+type IEvent any
 
 type IEventHandler[T IEvent] interface {
 	Handle(event T) error

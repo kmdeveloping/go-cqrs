@@ -1,6 +1,6 @@
 package query
 
-type IQuery interface{}
+type IQuery any
 
 type IQueryHandler[T IQuery, R any] interface {
 	Handle(T) (R, error)

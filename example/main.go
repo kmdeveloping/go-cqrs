@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/kmdeveloping/go-cqrs/cqrs"
@@ -19,11 +20,19 @@ func init() {
 }
 
 func main() {
-	err := cqrs.ExecuteCommand(commands.DoSomethingCommand{Something: "Helloooooo"})
+	doSomethingCommand := commands.DoSomethingCommand{
+		Something: "Helloooooo",
+	}
+	err := cqrs.ExecuteCommand(doSomethingCommand)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
+
+	// this result is supposed to be set by the command handler
+	// but it is not set since the ExecuteCommand method does not use a pointer
+	// this is a bug in the library and the command handler should be able to set the result parameter
+	fmt.Println(doSomethingCommand.Result)
 
 	result, er := cqrs.ExecuteQuery[queries.GetNameQuery, queries.GetNameQueryResponse](queries.GetNameQuery{ID: 987})
 	if er != nil {

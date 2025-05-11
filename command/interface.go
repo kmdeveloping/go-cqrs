@@ -1,7 +1,6 @@
 package command
 
-type ICommand interface {
-}
+type ICommand any
 
 type ICommandHandler[T ICommand] interface {
 	Handle(T) error

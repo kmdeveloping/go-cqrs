@@ -16,6 +16,11 @@ var _ command.ICommandHandler[commands.DoSomethingCommand] = (*DoThatCommandHand
 func (d DoThatCommandHandler) Handle(command commands.DoSomethingCommand) error {
 	fmt.Println(command.Something)
 
+	if command.Something != "" {
+		command.Result = "It's done!"
+	} else {
+		command.Result = "Nothing to do!"
+	}
 	return cqrs.PublishEvent(events.SomeEvent{
 		Name: command.Something,
 	})
