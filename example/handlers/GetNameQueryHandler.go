@@ -4,9 +4,12 @@ import (
 	"errors"
 
 	"github.com/kmdeveloping/go-cqrs/example/queries"
+	"github.com/kmdeveloping/go-cqrs/query"
 )
 
 type GetNameQueryHandler struct{}
+
+var _ query.IQueryHandler[queries.GetNameQuery, queries.GetNameQueryResponse] = (*GetNameQueryHandler)(nil)
 
 func (h GetNameQueryHandler) Handle(qry queries.GetNameQuery) (queries.GetNameQueryResponse, error) {
 	if qry.ID >= 37 {
