@@ -1,47 +1,33 @@
+// filepath: /Volumes/ExternalX1/Source/GolandProjects/go-cqrs/cqrs/methods.go
 package cqrs
 
 import (
 	"fmt"
 	"reflect"
 
-	"github.com/kmdeveloping/go-cqrs/command"
 	"github.com/kmdeveloping/go-cqrs/event"
 	"github.com/kmdeveloping/go-cqrs/query"
-	"github.com/kmdeveloping/go-cqrs/validator"
 )
 
-func ExecuteCommand[T any](cmd T) error {
+// ExecuteCommand handles execution of pointer command types to support command state mutations
+func ExecuteCommand[T any](cmd *T) error {
 	typ := reflect.TypeOf(cmd)
 
-	// Run validators on the command
-	mgr.mu.RLock()
-	validators := mgr.validators[typ]
-	mgr.mu.RUnlock()
-
-	for _, v := range validators {
-		val, ok := v.(validator.IValidatorHandler[T])
-		if !ok {
-			return fmt.Errorf("validator type mismatch for %T", cmd)
-		}
-		if err := val.Validate(cmd); err != nil {
-			return err
-		}
-	}
-
-	// Run command if validators pass
+	// Run command handler
 	mgr.mu.RLock()
 	handler, ok := mgr.commandHandlers[typ]
 	mgr.mu.RUnlock()
 	if !ok {
 		return fmt.Errorf("handler not found for type %v", typ)
 	}
-	typedHandler, ok := handler.(command.ICommandHandler[T])
+
+	// Since we're accepting a pointer already, we can directly use it
+	h, ok := handler.(interface{ Handle(*T) error })
 	if !ok {
 		return fmt.Errorf("handler type mismatch for %v", typ)
 	}
 
-	// Pass the command to the handler
-	return typedHandler.Handle(cmd)
+	return h.Handle(cmd)
 }
 
 func ExecuteQuery[T query.IQuery, R any](qry T) (R, error) {

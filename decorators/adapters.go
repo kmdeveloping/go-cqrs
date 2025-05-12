@@ -18,34 +18,20 @@ func WithDecorators(base IHandlerDecorator, d ...HandlerDecorator) IHandlerDecor
 	return wrapped
 }
 
-func WrapCommandHandler[T any](h command.ICommandHandler[T]) IHandlerDecorator {
+func WrapCommandHandler[T command.ICommand](h command.ICommandHandler[T]) IHandlerDecorator {
 	return HandlerDecoratorFunc(func(ctx context.Context, message any) (any, error) {
-		// Try to convert the message directly to the expected type
-		cmdVal, ok := message.(T)
+		cmd, ok := message.(*T)
 		if !ok {
 			return nil, fmt.Errorf("invalid command type: %T", message)
 		}
-		
-		// Handle the command using the actual type T
-		err := h.Handle(cmdVal)
-		
-		// Return the potentially modified command
-		return cmdVal, err
+		err := h.Handle(cmd)
+		return nil, err
 	})
 }
 
-func UnwrapAsCommandHandler[T any](h IHandlerDecorator) (command.ICommandHandler[T], bool) {
-	return commandHandlerFunc[T](func(cmd T) error {
-		// Execute the handler
-		result, err := h.Handle(context.Background(), cmd)
-		if err == nil && result != nil {
-			// Try to set result if the command implements ICommand
-			// First convert to any to work with the interfaces
-			cmdAny := any(cmd)
-			if cmdICommand, ok := cmdAny.(command.ICommand); ok {
-				cmdICommand.SetResult(result)
-			}
-		}
+func UnwrapAsCommandHandler[T command.ICommand](h IHandlerDecorator) (command.ICommandHandler[T], bool) {
+	return commandHandlerFunc[T](func(cmd *T) error {
+		_, err := h.Handle(context.Background(), cmd)
 		return err
 	}), true
 }

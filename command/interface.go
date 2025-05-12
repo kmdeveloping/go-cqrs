@@ -1,26 +1,17 @@
 package command
 
-type ICommand interface {
-	GetResult() any
-	SetResult(any)
-}
+type ICommand any
 
 // ICommandHandler interface handles commands of type T that implements ICommand
-// The T can be either a value or a pointer type that implements ICommand
-type ICommandHandler[T any] interface {
-	Handle(T) error
+// Commands are always passed as pointers to handlers for consistency
+type ICommandHandler[T ICommand] interface {
+	Handle(*T) error
 }
 
-type Base struct {
+type Base struct{}
+type BaseWithResult struct {
 	Result any
 }
 
-func (b *Base) GetResult() any {
-	return b.Result
-}
-
-func (b *Base) SetResult(result any) {
-	b.Result = result
-}
-
 var _ ICommand = (*Base)(nil)
+var _ ICommand = (*BaseWithResult)(nil)
