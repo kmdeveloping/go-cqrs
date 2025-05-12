@@ -36,6 +36,9 @@ package commands
 import "github.com/kmdeveloping/go-cqrs/command"
 
 type DoSomethingCommand struct {
+    // you can set a Result value in the command handler 
+    // this can be accessed from the executeCommand caller
+    // command.BaseWithResult 
     Something string
 }
 
@@ -80,21 +83,29 @@ import (
 
 type DoThatCommandHandler struct{}
 
-func (h *DoThatCommandHandler) Handle(cmd commands.DoSomethingCommand) error {
+func (h *DoThatCommandHandler) Handle(cmd *commands.DoSomethingCommand) error {
     // Handle the command
     return nil
 }
 
+// reference the interface to make sure your implementing it correctly
+var _ command.ICommandHandler[commands.DoSomthingCommand] = (*DoThatCommandHandler)(nil)
+
+// or publish an event from a handler
 type DoSomeCommandWithEventPublishingHandler struct {}
 
-func (h *DoSomeCommandWithEventPublishingHandler) Handle(cmd commands.DoSomeCommandWithEvent) error {
-    // handle the command
+func (h *DoSomeCommandWithEventPublishingHandler) Handle(cmd *commands.DoSomeCommandWithEvent) error {
+    // handle the command and publish an event to do something next
 
-    // events can be published within command and query handlers as well as from the main app
+    // events will be completed in sequence of the publish call
+    // the command handler will return once all events complete
     return cqrs.PublishEvent(events.SomeEventToPublish{
         SomeParam: "I am an event"
-    })    
+    })
 }
+
+// reference the interface ...
+var _ command.ICommandHandler[commands.DoSomeCommandWithEvent] = (*DoSomeCommandWithEventPublishingHandler)(nil)
 ```
 
 **Query Handler Example:**
@@ -200,8 +211,8 @@ func main() {
     // Initialize CQRS (as shown above)
     // ...
     
-    // Execute a command
-    cmd := commands.DoSomethingCommand{Something: "example"}
+    // Execute a command using a pointer
+    cmd := &commands.DoSomethingCommand{Something: "example"}
     if err := cqrs.ExecuteCommand(cmd); err != nil {
         log.Fatalf("Command execution failed: %v", err)
     }
@@ -224,6 +235,7 @@ func main() {
 
 ## Handler Auto-Registration
 
+### Work in progress
 This project includes a code generation tool to automatically register handlers:
 
 1. Use the `tools/gen-handler-registry/main.go` tool to scan your handlers directory
