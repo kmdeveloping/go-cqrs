@@ -262,7 +262,7 @@ import (
 
 func CustomDecorator() decorators.HandlerDecorator {
     return func(next decorators.IHandlerDecorator) decorators.IHandlerDecorator {
-        return decorators.HandlerDecoratorFunc(ctx context.Context, message any) (any, error) {
+        return decorators.HandlerDecoratorFunc(func(ctx context.Context, message any) (any, error) {
             // start your decorators actions here
             // this logic will run before the base handler is run
 
@@ -276,7 +276,7 @@ func CustomDecorator() decorators.HandlerDecorator {
             // do something with the response var if needed 
             // return the outputs after your logic completes so other decorators can complete their action
             // return response, err
-        }
+        })
     }
 }
 ```
