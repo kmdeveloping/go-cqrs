@@ -14,7 +14,7 @@ type DoThatCommandHandler struct{}
 // This handler implements the new pointer-receiving interface
 var _ command.ICommandHandler[commands.DoSomethingCommand] = (*DoThatCommandHandler)(nil)
 
-func (d DoThatCommandHandler) Handle(command commands.DoSomethingCommand) error {
+func (d DoThatCommandHandler) Handle(command *commands.DoSomethingCommand) error {
 	fmt.Println(command.Something)
 
 	if command.Something != "" {
@@ -24,7 +24,7 @@ func (d DoThatCommandHandler) Handle(command commands.DoSomethingCommand) error 
 		result := "Nothing to do!"
 		command.SetResult(result)
 	}
-
+	
 	return cqrs.PublishEvent(events.SomeEvent{
 		Name: command.Something,
 	})

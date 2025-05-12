@@ -29,10 +29,8 @@ func main() {
 		return
 	}
 
-	// this result is supposed to be set by the command handler
-	// but it is not set since the ExecuteCommand method does not use a pointer
-	// this is a bug in the library and the command handler should be able to set the result parameter
-	fmt.Println(doSomethingCommand.Result)
+	// Now the command result should be set by the handler since we're using a pointer interface
+	fmt.Println(doSomethingCommand.GetResult())
 
 	result, er := cqrs.ExecuteQuery[queries.GetNameQuery, queries.GetNameQueryResponse](queries.GetNameQuery{ID: 987})
 	if er != nil {
