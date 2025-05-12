@@ -24,14 +24,22 @@ func WrapCommandHandler[T command.ICommand](h command.ICommandHandler[T]) IHandl
 		if !ok {
 			return nil, fmt.Errorf("invalid command type: %T", message)
 		}
-		err := h.Handle(cmd)
-		return nil, err
+		err := h.Handle(&cmd)
+		// If the command was modified in the handler, ensure we return the updated version
+		return cmd, err
 	})
 }
 
 func UnwrapAsCommandHandler[T command.ICommand](h IHandlerDecorator) (command.ICommandHandler[T], bool) {
-	return commandHandlerFunc[T](func(cmd T) error {
-		_, err := h.Handle(context.Background(), cmd)
+	return commandHandlerFunc[T](func(cmd *T) error {
+		// Dereference the pointer for the Handle call as it expects a value
+		result, err := h.Handle(context.Background(), *cmd)
+		if err == nil && result != nil {
+			// Since cmd is a pointer to T, we need to first handle it as an interface
+			if cmdAsCommand, ok := interface{}(*cmd).(command.ICommand); ok {
+				cmdAsCommand.SetResult(result)
+			}
+		}
 		return err
 	}), true
 }

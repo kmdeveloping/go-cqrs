@@ -35,13 +35,13 @@ func ExecuteCommand[T command.ICommand](cmd T) error {
 	if !ok {
 		return fmt.Errorf("handler not found for type %v", typ)
 	}
-
 	typedHandler, ok := handler.(command.ICommandHandler[T])
 	if !ok {
 		return fmt.Errorf("handler type mismatch for %v", typ)
 	}
 
-	return typedHandler.Handle(cmd)
+	// Pass address of cmd to the handler
+	return typedHandler.Handle(&cmd)
 }
 
 func ExecuteQuery[T query.IQuery, R any](qry T) (R, error) {
