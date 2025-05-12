@@ -10,10 +10,10 @@ import (
 	"github.com/kmdeveloping/go-cqrs/validator"
 )
 
-func ExecuteCommand[T command.ICommand](cmd T) error {
+func ExecuteCommand[T any](cmd T) error {
 	typ := reflect.TypeOf(cmd)
 
-	// Run validators on command
+	// Run validators on the command
 	mgr.mu.RLock()
 	validators := mgr.validators[typ]
 	mgr.mu.RUnlock()
@@ -40,8 +40,8 @@ func ExecuteCommand[T command.ICommand](cmd T) error {
 		return fmt.Errorf("handler type mismatch for %v", typ)
 	}
 
-	// Pass address of cmd to the handler
-	return typedHandler.Handle(&cmd)
+	// Pass the command to the handler
+	return typedHandler.Handle(cmd)
 }
 
 func ExecuteQuery[T query.IQuery, R any](qry T) (R, error) {
