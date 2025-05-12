@@ -9,17 +9,8 @@ import (
 	"github.com/kmdeveloping/go-cqrs/query"
 )
 
-// ExecuteCommand is kept for backward compatibility but is now just a wrapper
-// that converts the value command to a pointer and calls ExecuteCommandPtr
-func ExecuteCommand[T any](cmd T) error {
-	// First create a copy of cmd that we can get a pointer to
-	cmdCopy := cmd
-	// Call the pointer version with address of the copy
-	return ExecuteCommandPtr(&cmdCopy)
-}
-
-// ExecuteCommandPtr handles execution of pointer command types with the refactored ICommandHandler
-func ExecuteCommandPtr[T any](cmd *T) error {
+// ExecuteCommand handles execution of pointer command types to support command state mutations
+func ExecuteCommand[T any](cmd *T) error {
 	typ := reflect.TypeOf(cmd)
 
 	// Run command handler

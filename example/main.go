@@ -22,14 +22,14 @@ func main() {
 	doSomethingCommand := &commands.DoSomethingCommand{
 		Something: "Helloooooo",
 	}
-	err := cqrs.ExecuteCommandPtr(doSomethingCommand)
+	err := cqrs.ExecuteCommand(doSomethingCommand)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
 	// Now the command result should be set by the handler since we're using a pointer interface
-	//fmt.Println(doSomethingCommand.GetResult())
+	log.Println(doSomethingCommand.Result)
 
 	result, er := cqrs.ExecuteQuery[queries.GetNameQuery, queries.GetNameQueryResponse](queries.GetNameQuery{ID: 987})
 	if er != nil {

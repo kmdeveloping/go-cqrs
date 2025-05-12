@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/kmdeveloping/go-cqrs/event"
 	"github.com/kmdeveloping/go-cqrs/example/events"
@@ -10,7 +10,7 @@ import (
 type SomeEventHandler struct{}
 
 func (s SomeEventHandler) Handle(event events.SomeEvent) error {
-	fmt.Println("event handler trigger for " + event.Name)
+	log.Println("event handler trigger for " + event.Name)
 	return nil
 }
 

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/kmdeveloping/go-cqrs/command"
 	"github.com/kmdeveloping/go-cqrs/cqrs"
@@ -15,7 +15,9 @@ type DoThatCommandHandler struct{}
 var _ command.ICommandHandler[commands.DoSomethingCommand] = (*DoThatCommandHandler)(nil)
 
 func (d DoThatCommandHandler) Handle(command *commands.DoSomethingCommand) error {
-	fmt.Println(command.Something)
+	log.Println(command.Something)
+
+	command.Result = "Hello from DoThatCommandHandler"
 
 	return cqrs.PublishEvent(events.SomeEvent{
 		Name: command.Something,
