@@ -9,5 +9,9 @@ type ICommandHandler[T ICommand] interface {
 }
 
 type Base struct{}
+type BaseWithResult struct {
+	Result any
+}
 
 var _ ICommand = (*Base)(nil)
+var _ ICommand = (*BaseWithResult)(nil)
