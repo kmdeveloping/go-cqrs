@@ -11,11 +11,10 @@ import (
 
 type DoThatCommandHandler struct{}
 
-// We register the handler for pointer type commands
-// But we don't need to assert the interface implementation since we made ICommandHandler accept any types
+// Make sure handler implements the interface with pointer commands
 var _ command.ICommandHandler[commands.DoSomethingCommand] = (*DoThatCommandHandler)(nil)
 
-func (d DoThatCommandHandler) Handle(command commands.DoSomethingCommand) error {
+func (d DoThatCommandHandler) Handle(command *commands.DoSomethingCommand) error {
 	fmt.Println(command.Something)
 
 	return cqrs.PublishEvent(events.SomeEvent{

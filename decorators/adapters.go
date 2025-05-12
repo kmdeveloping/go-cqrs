@@ -20,7 +20,7 @@ func WithDecorators(base IHandlerDecorator, d ...HandlerDecorator) IHandlerDecor
 
 func WrapCommandHandler[T command.ICommand](h command.ICommandHandler[T]) IHandlerDecorator {
 	return HandlerDecoratorFunc(func(ctx context.Context, message any) (any, error) {
-		cmd, ok := message.(T)
+		cmd, ok := message.(*T)
 		if !ok {
 			return nil, fmt.Errorf("invalid command type: %T", message)
 		}
@@ -30,7 +30,7 @@ func WrapCommandHandler[T command.ICommand](h command.ICommandHandler[T]) IHandl
 }
 
 func UnwrapAsCommandHandler[T command.ICommand](h IHandlerDecorator) (command.ICommandHandler[T], bool) {
-	return commandHandlerFunc[T](func(cmd T) error {
+	return commandHandlerFunc[T](func(cmd *T) error {
 		_, err := h.Handle(context.Background(), cmd)
 		return err
 	}), true

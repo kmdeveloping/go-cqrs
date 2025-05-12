@@ -19,10 +19,10 @@ func init() {
 }
 
 func main() {
-	doSomethingCommand := commands.DoSomethingCommand{
+	doSomethingCommand := &commands.DoSomethingCommand{
 		Something: "Helloooooo",
 	}
-	err := cqrs.ExecuteCommand(doSomethingCommand)
+	err := cqrs.ExecuteCommandPtr(doSomethingCommand)
 	if err != nil {
 		log.Fatal(err)
 		return

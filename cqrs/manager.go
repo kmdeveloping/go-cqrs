@@ -67,7 +67,8 @@ func (m *Manager) AddDecorator(decorator decorators.HandlerDecorator) *Manager {
 
 func RegisterValidator[T command.ICommand](validator validator.IValidatorHandler[T]) {
 	var zero T
-	typ := reflect.TypeOf(zero)
+	// Use pointer type for registration since validators now expect pointers
+	typ := reflect.TypeOf(&zero)
 
 	mgr.mu.Lock()
 	defer mgr.mu.Unlock()
@@ -76,7 +77,8 @@ func RegisterValidator[T command.ICommand](validator validator.IValidatorHandler
 
 func RegisterCommandHandler[T command.ICommand](handler command.ICommandHandler[T]) {
 	var zero T
-	typ := reflect.TypeOf(zero)
+	// Use pointer type for registration since handlers now expect pointers
+	typ := reflect.TypeOf(&zero)
 
 	base := decorators.WrapCommandHandler(handler)
 	decorated := decorators.WithDecorators(base, mgr.decorators...)
