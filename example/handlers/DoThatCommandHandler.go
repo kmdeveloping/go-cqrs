@@ -11,10 +11,10 @@ import (
 
 type DoThatCommandHandler struct{}
 
-// This handler implements the new pointer-receiving interface
-var _ command.ICommandHandler[commands.DoSomethingCommand] = (*DoThatCommandHandler)(nil)
+// We register the handler for pointer type commands
+// But we don't need to assert the interface implementation since we made ICommandHandler accept any types
 
-func (d DoThatCommandHandler) Handle(command commands.DoSomethingCommand) error {
+func (d DoThatCommandHandler) Handle(command *commands.DoSomethingCommand) error {
 	fmt.Println(command.Something)
 
 	if command.Something != "" {

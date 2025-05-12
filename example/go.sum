@@ -1,6 +1,4 @@
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/kmdeveloping/go-cqrs v0.1.0 h1:OBJOgW8py8cPk9grX0VNL5Sg8v9EmLfl5GCO5uOUo5o=
-github.com/kmdeveloping/go-cqrs v0.1.0/go.mod h1:ndzSw9nG0DSQ8A2JTcnA9nejKm4QTvquO05BIEbbRgk=
-github.com/kmdeveloping/go-cqrs v1.0.0 h1:Q7Og2N2rZoPJZYn5kUiaEj/qiDsxtlFLYs7idlEE0k0=
-github.com/kmdeveloping/go-cqrs v1.0.0/go.mod h1:ndzSw9nG0DSQ8A2JTcnA9nejKm4QTvquO05BIEbbRgk=
+github.com/kmdeveloping/go-cqrs v0.2.1 h1:M/C8rrwPlPWUNj2gFLsjS90gx0D6SFoeqsT9zvgq3us=
+github.com/kmdeveloping/go-cqrs v0.2.1/go.mod h1:ndzSw9nG0DSQ8A2JTcnA9nejKm4QTvquO05BIEbbRgk=

@@ -1,7 +1,6 @@
 package validator
 
-import "github.com/kmdeveloping/go-cqrs/command"
-
-type IValidatorHandler[T command.ICommand] interface {
+// IValidatorHandler validates commands of any type
+type IValidatorHandler[T any] interface {
 	Validate(T) error
 }

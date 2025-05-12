@@ -18,26 +18,32 @@ func WithDecorators(base IHandlerDecorator, d ...HandlerDecorator) IHandlerDecor
 	return wrapped
 }
 
-func WrapCommandHandler[T command.ICommand](h command.ICommandHandler[T]) IHandlerDecorator {
+func WrapCommandHandler[T any](h command.ICommandHandler[T]) IHandlerDecorator {
 	return HandlerDecoratorFunc(func(ctx context.Context, message any) (any, error) {
-		cmd, ok := message.(T)
+		// Try to convert the message directly to the expected type
+		cmdVal, ok := message.(T)
 		if !ok {
 			return nil, fmt.Errorf("invalid command type: %T", message)
 		}
-		err := h.Handle(&cmd)
-		// If the command was modified in the handler, ensure we return the updated version
-		return cmd, err
+		
+		// Handle the command using the actual type T
+		err := h.Handle(cmdVal)
+		
+		// Return the potentially modified command
+		return cmdVal, err
 	})
 }
 
-func UnwrapAsCommandHandler[T command.ICommand](h IHandlerDecorator) (command.ICommandHandler[T], bool) {
-	return commandHandlerFunc[T](func(cmd *T) error {
-		// Dereference the pointer for the Handle call as it expects a value
-		result, err := h.Handle(context.Background(), *cmd)
+func UnwrapAsCommandHandler[T any](h IHandlerDecorator) (command.ICommandHandler[T], bool) {
+	return commandHandlerFunc[T](func(cmd T) error {
+		// Execute the handler
+		result, err := h.Handle(context.Background(), cmd)
 		if err == nil && result != nil {
-			// Since cmd is a pointer to T, we need to first handle it as an interface
-			if cmdAsCommand, ok := interface{}(*cmd).(command.ICommand); ok {
-				cmdAsCommand.SetResult(result)
+			// Try to set result if the command implements ICommand
+			// First convert to any to work with the interfaces
+			cmdAny := any(cmd)
+			if cmdICommand, ok := cmdAny.(command.ICommand); ok {
+				cmdICommand.SetResult(result)
 			}
 		}
 		return err
