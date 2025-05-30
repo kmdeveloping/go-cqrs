@@ -161,7 +161,7 @@ func publishEvent[T event.IEvent](ctx context.Context, m *Manager, e T) error {
 		select {
 		case <-ctx.Done():
 			errorAggregator.Add(ctx.Err())
-			break
+			return errorAggregator.Error()
 		default:
 		}
 

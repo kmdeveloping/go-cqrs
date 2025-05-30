@@ -109,7 +109,6 @@ func (v *testValidator) WasValidated() bool {
 func setupTestManager() func() {
 	// Save current manager state
 	originalManager := currentManager
-	originalOnce := defaultManagerOnce
 
 	// Reset for clean test
 	ResetManager()
@@ -118,7 +117,6 @@ func setupTestManager() func() {
 	return func() {
 		currentManagerMu.Lock()
 		currentManager = originalManager
-		defaultManagerOnce = originalOnce
 		currentManagerMu.Unlock()
 	}
 }
