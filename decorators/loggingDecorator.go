@@ -74,7 +74,7 @@ func simpleHash(v any) uint32 {
 
 	typeName := getTypeName(v)
 	h := uint32(2166136261) // FNV offset basis
-	for i := 0; i < len(typeName); i++ {
+	for i := range len(typeName) {
 		h ^= uint32(typeName[i])
 		h *= 16777619 // FNV prime
 	}
