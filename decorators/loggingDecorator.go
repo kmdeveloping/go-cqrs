@@ -18,7 +18,7 @@ func LoggingDecorator(logger *log.Logger) HandlerDecorator {
 	return LoggingDecoratorWithConfig(logger, LoggingConfig{
 		Enabled:    true,
 		LogInputs:  true,
-		LogOutputs: false,
+		LogOutputs: true,
 		SampleRate: 1.0,
 	})
 }
