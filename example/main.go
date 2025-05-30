@@ -8,6 +8,7 @@ import (
 
 	"github.com/kmdeveloping/go-cqrs/cqrs"
 	"github.com/kmdeveloping/go-cqrs/example/commands"
+	"github.com/kmdeveloping/go-cqrs/example/example_decorators"
 	"github.com/kmdeveloping/go-cqrs/example/queries"
 )
 
@@ -15,6 +16,8 @@ func init() {
 	m := cqrs.NewCqrsManager()
 	m.AddMetricsDecorator()
 	m.AddLoggingDecorator()
+	// add custom decorators like this
+	m.AddDecorator(example_decorators.ErrorHandlerDecorator())
 
 	registerHandlers()
 }
