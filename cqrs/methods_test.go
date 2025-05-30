@@ -50,7 +50,11 @@ func (h *errorEventHandler) WasHandled() bool {
 
 // OPTIMIZATION TEST: Verify error aggregation in event publishing
 func TestPublishEvent_ErrorAggregation(t *testing.T) {
+	cleanup := setupTestManager()
+	defer cleanup()
+
 	manager := NewCqrsManager()
+	SetManager(manager)
 	ctx := context.Background()
 
 	// Register multiple handlers - some succeed, some fail
@@ -59,13 +63,13 @@ func TestPublishEvent_ErrorAggregation(t *testing.T) {
 	errorHandler1 := &errorEventHandler{err: errors.New("error 1")}
 	errorHandler2 := &errorEventHandler{err: errors.New("error 2")}
 
-	RegisterEventHandler(manager, successHandler1)
-	RegisterEventHandler(manager, errorHandler1)
-	RegisterEventHandler(manager, successHandler2)
-	RegisterEventHandler(manager, errorHandler2)
+	RegisterEventHandler(successHandler1)
+	RegisterEventHandler(errorHandler1)
+	RegisterEventHandler(successHandler2)
+	RegisterEventHandler(errorHandler2)
 
 	// Publish event
-	err := PublishEvent(ctx, manager, TestEvent{ID: "test", Message: "hello"})
+	err := PublishEvent(ctx, TestEvent{ID: "test", Message: "hello"})
 
 	// Verify all handlers were called
 	if !successHandler1.WasHandled() {
@@ -94,14 +98,18 @@ func TestPublishEvent_ErrorAggregation(t *testing.T) {
 
 // OPTIMIZATION TEST: Verify single error handling
 func TestPublishEvent_SingleError(t *testing.T) {
+	cleanup := setupTestManager()
+	defer cleanup()
+
 	manager := NewCqrsManager()
+	SetManager(manager)
 	ctx := context.Background()
 
 	// Register one error handler
 	errorHandler := &errorEventHandler{err: errors.New("single error")}
-	RegisterEventHandler(manager, errorHandler)
+	RegisterEventHandler(errorHandler)
 
-	err := PublishEvent(ctx, manager, TestEvent{ID: "test", Message: "hello"})
+	err := PublishEvent(ctx, TestEvent{ID: "test", Message: "hello"})
 
 	if err == nil {
 		t.Error("Expected error, got nil")
@@ -115,16 +123,20 @@ func TestPublishEvent_SingleError(t *testing.T) {
 
 // OPTIMIZATION TEST: Verify no error when all handlers succeed
 func TestPublishEvent_NoError(t *testing.T) {
+	cleanup := setupTestManager()
+	defer cleanup()
+
 	manager := NewCqrsManager()
+	SetManager(manager)
 	ctx := context.Background()
 
 	// Register success handlers
 	successHandler1 := &successEventHandler{}
 	successHandler2 := &successEventHandler{}
-	RegisterEventHandler(manager, successHandler1)
-	RegisterEventHandler(manager, successHandler2)
+	RegisterEventHandler(successHandler1)
+	RegisterEventHandler(successHandler2)
 
-	err := PublishEvent(ctx, manager, TestEvent{ID: "test", Message: "hello"})
+	err := PublishEvent(ctx, TestEvent{ID: "test", Message: "hello"})
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -133,19 +145,23 @@ func TestPublishEvent_NoError(t *testing.T) {
 
 // OPTIMIZATION TEST: Verify context cancellation handling
 func TestPublishEvent_ContextCancellation(t *testing.T) {
+	cleanup := setupTestManager()
+	defer cleanup()
+
 	manager := NewCqrsManager()
+	SetManager(manager)
 
 	// Create a context that will be cancelled
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Register a slow handler that should be interrupted
 	slowHandler := &testEventHandler{}
-	RegisterEventHandler(manager, slowHandler)
+	RegisterEventHandler(slowHandler)
 
 	// Cancel the context before publishing
 	cancel()
 
-	err := PublishEvent(ctx, manager, TestEvent{ID: "test", Message: "hello"})
+	err := PublishEvent(ctx, TestEvent{ID: "test", Message: "hello"})
 
 	// Should return context cancellation error
 	if err == nil {
@@ -158,16 +174,20 @@ func TestPublishEvent_ContextCancellation(t *testing.T) {
 
 // OPTIMIZATION TEST: Verify async event publishing
 func TestPublishEventAsync_NonBlocking(t *testing.T) {
+	cleanup := setupTestManager()
+	defer cleanup()
+
 	manager := NewCqrsManager()
+	SetManager(manager)
 	ctx := context.Background()
 
 	// Register a slow handler
 	slowHandler := &testEventHandler{}
-	RegisterEventHandler(manager, slowHandler)
+	RegisterEventHandler(slowHandler)
 
 	// Async publishing should return immediately
 	start := time.Now()
-	err := PublishEventAsync(ctx, manager, TestEvent{ID: "test", Message: "hello"})
+	err := PublishEventAsync(ctx, TestEvent{ID: "test", Message: "hello"})
 	duration := time.Since(start)
 
 	// Should return immediately without error
@@ -233,11 +253,15 @@ func TestErrorAggregator(t *testing.T) {
 
 // OPTIMIZATION TEST: Verify no handlers scenario
 func TestPublishEvent_NoHandlers(t *testing.T) {
+	cleanup := setupTestManager()
+	defer cleanup()
+
 	manager := NewCqrsManager()
+	SetManager(manager)
 	ctx := context.Background()
 
 	// Publish event without any registered handlers
-	err := PublishEvent(ctx, manager, TestEvent{ID: "test", Message: "hello"})
+	err := PublishEvent(ctx, TestEvent{ID: "test", Message: "hello"})
 
 	// Should not return an error
 	if err != nil {
@@ -247,18 +271,22 @@ func TestPublishEvent_NoHandlers(t *testing.T) {
 
 // OPTIMIZATION TEST: Verify command validation with type cache
 func TestExecuteCommand_WithValidation(t *testing.T) {
+	cleanup := setupTestManager()
+	defer cleanup()
+
 	manager := NewCqrsManager()
+	SetManager(manager)
 	ctx := context.Background()
 
 	// Register validator and handler
 	validator := &testValidator{}
 	handler := &testCommandHandler{}
 
-	RegisterValidator(manager, validator)
-	RegisterCommandHandler(manager, handler)
+	RegisterValidator(validator)
+	RegisterCommandHandler(handler)
 
 	// Execute command
-	err := ExecuteCommand(ctx, manager, &TestCommand{ID: "test", Data: "data"})
+	err := ExecuteCommand(ctx, &TestCommand{ID: "test", Data: "data"})
 
 	if err != nil {
 		t.Errorf("Command execution should succeed, got: %v", err)
@@ -277,26 +305,34 @@ func TestExecuteCommand_WithValidation(t *testing.T) {
 
 // BENCHMARK: Test event publishing performance
 func BenchmarkPublishEvent_SingleHandler(b *testing.B) {
+	cleanup := setupTestManager()
+	defer cleanup()
+
 	manager := NewCqrsManager()
+	SetManager(manager)
 	handler := &testEventHandler{}
-	RegisterEventHandler(manager, handler)
+	RegisterEventHandler(handler)
 
 	ctx := context.Background()
 	event := TestEvent{ID: "benchmark", Message: "test"}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		PublishEvent(ctx, manager, event)
+		PublishEvent(ctx, event)
 	}
 }
 
 func BenchmarkPublishEvent_MultipleHandlers(b *testing.B) {
+	cleanup := setupTestManager()
+	defer cleanup()
+
 	manager := NewCqrsManager()
+	SetManager(manager)
 
 	// Register multiple handlers
 	for i := 0; i < 10; i++ {
 		handler := &testEventHandler{}
-		RegisterEventHandler(manager, handler)
+		RegisterEventHandler(handler)
 	}
 
 	ctx := context.Background()
@@ -304,17 +340,21 @@ func BenchmarkPublishEvent_MultipleHandlers(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		PublishEvent(ctx, manager, event)
+		PublishEvent(ctx, event)
 	}
 }
 
 func BenchmarkPublishEvent_ErrorAggregation(b *testing.B) {
+	cleanup := setupTestManager()
+	defer cleanup()
+
 	manager := NewCqrsManager()
+	SetManager(manager)
 
 	// Register mix of success and error handlers
 	for i := 0; i < 5; i++ {
-		RegisterEventHandler(manager, &successEventHandler{})
-		RegisterEventHandler(manager, &errorEventHandler{err: fmt.Errorf("error %d", i)})
+		RegisterEventHandler(&successEventHandler{})
+		RegisterEventHandler(&errorEventHandler{err: fmt.Errorf("error %d", i)})
 	}
 
 	ctx := context.Background()
@@ -322,6 +362,6 @@ func BenchmarkPublishEvent_ErrorAggregation(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		PublishEvent(ctx, manager, event)
+		PublishEvent(ctx, event)
 	}
 }

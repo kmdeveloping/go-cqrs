@@ -15,8 +15,12 @@ import (
 	"github.com/kmdeveloping/go-cqrs/validator"
 )
 
-// OPTIMIZATION: Removed global singleton pattern to eliminate race conditions and improve testability
-// var mgr *Manager // REMOVED
+// OPTIMIZATION: Dependency injection for clean API
+var (
+	currentManager     *Manager
+	currentManagerMu   sync.RWMutex
+	defaultManagerOnce sync.Once
+)
 
 // typeCache stores reflection information to avoid expensive reflect.TypeOf calls in hot paths
 type typeCache struct {
@@ -81,6 +85,56 @@ func NewCqrsManager() *Manager {
 	}
 }
 
+// DEPENDENCY INJECTION: Set the current manager for all operations
+// This should be called once during application startup
+func SetManager(manager *Manager) {
+	if manager == nil {
+		panic("manager cannot be nil")
+	}
+	currentManagerMu.Lock()
+	defer currentManagerMu.Unlock()
+	currentManager = manager
+}
+
+// DEPENDENCY INJECTION: Get the current manager
+// Creates a default manager if none is set (lazy initialization)
+func GetManager() *Manager {
+	currentManagerMu.RLock()
+	if currentManager != nil {
+		defer currentManagerMu.RUnlock()
+		return currentManager
+	}
+	currentManagerMu.RUnlock()
+
+	// Use double-checked locking for thread-safe lazy initialization
+	currentManagerMu.Lock()
+	defer currentManagerMu.Unlock()
+
+	if currentManager == nil {
+		defaultManagerOnce.Do(func() {
+			currentManager = NewCqrsManager()
+		})
+	}
+
+	return currentManager
+}
+
+// DEPENDENCY INJECTION: Check if a manager is explicitly set
+func HasManagerSet() bool {
+	currentManagerMu.RLock()
+	defer currentManagerMu.RUnlock()
+	return currentManager != nil
+}
+
+// DEPENDENCY INJECTION: Reset manager (useful for testing)
+func ResetManager() {
+	currentManagerMu.Lock()
+	defer currentManagerMu.Unlock()
+	currentManager = nil
+	// Reset the once to allow creating a new default manager
+	defaultManagerOnce = sync.Once{}
+}
+
 // OPTIMIZATION: Improved thread safety with specific mutex
 func (m *Manager) AddLoggingDecorator() *Manager {
 	logger := log.New(os.Stdout, "", log.LstdFlags)
@@ -113,8 +167,28 @@ func (m *Manager) AddDecorator(decorator decorators.HandlerDecorator) *Manager {
 	return m
 }
 
-// OPTIMIZATION: Convert to function that accepts Manager instance instead of global function
-func RegisterValidator[T command.ICommand](m *Manager, validator validator.IValidatorHandler[T]) error {
+// CLEAN API: Clean registration method using current manager
+func RegisterValidator[T command.ICommand](validator validator.IValidatorHandler[T]) error {
+	return registerValidator(GetManager(), validator)
+}
+
+// CLEAN API: Clean registration method using current manager
+func RegisterCommandHandler[T command.ICommand](handler command.ICommandHandler[T]) error {
+	return registerCommandHandler(GetManager(), handler)
+}
+
+// CLEAN API: Clean registration method using current manager
+func RegisterQueryHandler[T query.IQuery, R any](handler query.IQueryHandler[T, R]) error {
+	return registerQueryHandler(GetManager(), handler)
+}
+
+// CLEAN API: Clean registration method using current manager
+func RegisterEventHandler[T event.IEvent](handler event.IEventHandler[T]) error {
+	return registerEventHandler(GetManager(), handler)
+}
+
+// Internal registration methods that work with specific manager instances
+func registerValidator[T command.ICommand](m *Manager, validator validator.IValidatorHandler[T]) error {
 	var zero T
 	// Use pointer type for registration since validators now expect pointers
 	typ := m.typeCache.getType(&zero)
@@ -126,8 +200,7 @@ func RegisterValidator[T command.ICommand](m *Manager, validator validator.IVali
 	return nil
 }
 
-// OPTIMIZATION: Convert to function that accepts Manager instance with proper error handling
-func RegisterCommandHandler[T command.ICommand](m *Manager, handler command.ICommandHandler[T]) error {
+func registerCommandHandler[T command.ICommand](m *Manager, handler command.ICommandHandler[T]) error {
 	var zero T
 	// Use pointer type for registration since handlers now expect pointers
 	typ := m.typeCache.getType(&zero)
@@ -154,8 +227,7 @@ func RegisterCommandHandler[T command.ICommand](m *Manager, handler command.ICom
 	return nil
 }
 
-// OPTIMIZATION: Convert to function that accepts Manager instance with proper error handling
-func RegisterQueryHandler[T query.IQuery, R any](m *Manager, handler query.IQueryHandler[T, R]) error {
+func registerQueryHandler[T query.IQuery, R any](m *Manager, handler query.IQueryHandler[T, R]) error {
 	var zero T
 	typ := m.typeCache.getType(zero)
 
@@ -181,8 +253,7 @@ func RegisterQueryHandler[T query.IQuery, R any](m *Manager, handler query.IQuer
 	return nil
 }
 
-// OPTIMIZATION: Convert to function that accepts Manager instance with proper error handling
-func RegisterEventHandler[T event.IEvent](m *Manager, handler event.IEventHandler[T]) error {
+func registerEventHandler[T event.IEvent](m *Manager, handler event.IEventHandler[T]) error {
 	var zero T
 	typ := m.typeCache.getType(zero)
 
@@ -233,4 +304,34 @@ func (m *Manager) GetHandlerCounts() (commands, queries, events, validators int)
 	m.validatorsMu.RUnlock()
 
 	return
+}
+
+// CLEAN API: Add clean methods for adding decorators to current manager
+func AddLoggingDecorator() *Manager {
+	return GetManager().AddLoggingDecorator()
+}
+
+func AddMetricsDecorator() *Manager {
+	return GetManager().AddMetricsDecorator()
+}
+
+func AddDecorator(decorator decorators.HandlerDecorator) *Manager {
+	return GetManager().AddDecorator(decorator)
+}
+
+// CLEAN API: Add clean methods for metrics
+func GetCommandCount() int64 {
+	return GetManager().GetCommandCount()
+}
+
+func GetQueryCount() int64 {
+	return GetManager().GetQueryCount()
+}
+
+func GetEventCount() int64 {
+	return GetManager().GetEventCount()
+}
+
+func GetHandlerCounts() (commands, queries, events, validators int) {
+	return GetManager().GetHandlerCounts()
 }

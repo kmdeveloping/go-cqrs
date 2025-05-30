@@ -36,9 +36,28 @@ func (ea *ErrorAggregator) HasErrors() bool {
 	return len(ea.errors) > 0
 }
 
-// ExecuteCommand handles execution of pointer command types to support command state mutations
-// OPTIMIZATION: Now accepts Manager instance instead of using global singleton
-func ExecuteCommand[T any](ctx context.Context, m *Manager, cmd *T) error {
+// CLEAN API: Execute command using current manager
+func ExecuteCommand[T any](ctx context.Context, cmd *T) error {
+	return executeCommand(ctx, GetManager(), cmd)
+}
+
+// CLEAN API: Execute query using current manager
+func ExecuteQuery[T query.IQuery, R any](ctx context.Context, qry T) (R, error) {
+	return executeQuery[T, R](ctx, GetManager(), qry)
+}
+
+// CLEAN API: Publish event using current manager
+func PublishEvent[T event.IEvent](ctx context.Context, e T) error {
+	return publishEvent(ctx, GetManager(), e)
+}
+
+// CLEAN API: Publish event async using current manager
+func PublishEventAsync[T event.IEvent](ctx context.Context, e T) error {
+	return publishEventAsync(ctx, GetManager(), e)
+}
+
+// Internal execution methods that work with specific manager instances
+func executeCommand[T any](ctx context.Context, m *Manager, cmd *T) error {
 	// OPTIMIZATION: Use cached type instead of expensive reflection
 	typ := m.typeCache.getType(cmd)
 
@@ -88,8 +107,7 @@ func ExecuteCommand[T any](ctx context.Context, m *Manager, cmd *T) error {
 	return h.Handle(ctx, cmd)
 }
 
-// OPTIMIZATION: Now accepts Manager instance instead of using global singleton
-func ExecuteQuery[T query.IQuery, R any](ctx context.Context, m *Manager, qry T) (R, error) {
+func executeQuery[T query.IQuery, R any](ctx context.Context, m *Manager, qry T) (R, error) {
 	var zero R
 	// OPTIMIZATION: Use cached type instead of expensive reflection
 	typ := m.typeCache.getType(qry)
@@ -113,7 +131,7 @@ func ExecuteQuery[T query.IQuery, R any](ctx context.Context, m *Manager, qry T)
 }
 
 // OPTIMIZATION: Improved event handling with error aggregation and better performance
-func PublishEvent[T event.IEvent](ctx context.Context, m *Manager, e T) error {
+func publishEvent[T event.IEvent](ctx context.Context, m *Manager, e T) error {
 	// OPTIMIZATION: Use cached type instead of expensive reflection
 	typ := m.typeCache.getType(e)
 
@@ -162,11 +180,11 @@ func PublishEvent[T event.IEvent](ctx context.Context, m *Manager, e T) error {
 }
 
 // OPTIMIZATION: Async event publishing for better performance in high-throughput scenarios
-func PublishEventAsync[T event.IEvent](ctx context.Context, m *Manager, e T) error {
+func publishEventAsync[T event.IEvent](ctx context.Context, m *Manager, e T) error {
 	// For async processing, we start the event handling in a goroutine
 	// and return immediately. Errors are logged but not returned.
 	go func() {
-		if err := PublishEvent(ctx, m, e); err != nil {
+		if err := publishEvent(ctx, m, e); err != nil {
 			// TODO: Add proper logging here based on the logging decorator configuration
 			// For now, we silently handle the error to maintain backward compatibility
 			_ = err
@@ -176,33 +194,15 @@ func PublishEventAsync[T event.IEvent](ctx context.Context, m *Manager, e T) err
 	return nil
 }
 
-// Convenience methods for backward compatibility - these will need a default Manager instance
-// DEPRECATED: These methods will be removed in a future version. Use the methods that accept Manager explicitly.
-
-var defaultManager *Manager
-
-// SetDefaultManager sets the default manager for backward compatibility methods
-func SetDefaultManager(m *Manager) {
-	defaultManager = m
-}
-
-// GetDefaultManager returns the default manager, creating one if it doesn't exist
-func GetDefaultManager() *Manager {
-	if defaultManager == nil {
-		defaultManager = NewCqrsManager()
-	}
-	return defaultManager
-}
-
-// Convenience methods that use the default manager for backwards compatibility
+// BACKWARD COMPATIBILITY: Convenience methods that use context.Background()
 func ExecuteCommandWithBackground[T any](cmd *T) error {
-	return ExecuteCommand(context.Background(), GetDefaultManager(), cmd)
+	return ExecuteCommand(context.Background(), cmd)
 }
 
 func ExecuteQueryWithBackground[T query.IQuery, R any](qry T) (R, error) {
-	return ExecuteQuery[T, R](context.Background(), GetDefaultManager(), qry)
+	return ExecuteQuery[T, R](context.Background(), qry)
 }
 
 func PublishEventWithBackground[T event.IEvent](e T) error {
-	return PublishEvent(context.Background(), GetDefaultManager(), e)
+	return PublishEvent(context.Background(), e)
 }
