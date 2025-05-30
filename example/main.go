@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/kmdeveloping/go-cqrs/cqrs"
@@ -19,10 +20,12 @@ func init() {
 }
 
 func main() {
+	ctx := context.Background()
+
 	doSomethingCommand := &commands.DoSomethingCommand{
 		Something: "Helloooooo",
 	}
-	err := cqrs.ExecuteCommand(doSomethingCommand)
+	err := cqrs.ExecuteCommand(ctx, doSomethingCommand)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -31,7 +34,7 @@ func main() {
 	// Now the command result should be set by the handler since we're using a pointer interface
 	log.Println(doSomethingCommand.Result)
 
-	result, er := cqrs.ExecuteQuery[queries.GetNameQuery, queries.GetNameQueryResponse](queries.GetNameQuery{ID: 987})
+	result, er := cqrs.ExecuteQuery[queries.GetNameQuery, queries.GetNameQueryResponse](ctx, queries.GetNameQuery{ID: 987})
 	if er != nil {
 		log.Fatal(er)
 		return
