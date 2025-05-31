@@ -1,4 +1,4 @@
-//go:generate go run ../tools/gen-handler-registry/main.go
+//go:generate gen-handler-registry
 
 package main
 
