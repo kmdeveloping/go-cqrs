@@ -1,6 +1,7 @@
 package event
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,7 +10,7 @@ import (
 type IEvent any
 
 type IEventHandler[T IEvent] interface {
-	Handle(event T) error
+	Handle(ctx context.Context, event T) error
 }
 
 type Base struct {

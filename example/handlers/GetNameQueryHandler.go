@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 
 	"github.com/kmdeveloping/go-cqrs/example/queries"
@@ -11,7 +12,7 @@ type GetNameQueryHandler struct{}
 
 var _ query.IQueryHandler[queries.GetNameQuery, queries.GetNameQueryResponse] = (*GetNameQueryHandler)(nil)
 
-func (h GetNameQueryHandler) Handle(qry queries.GetNameQuery) (queries.GetNameQueryResponse, error) {
+func (h GetNameQueryHandler) Handle(ctx context.Context, qry queries.GetNameQuery) (queries.GetNameQueryResponse, error) {
 	if qry.ID >= 37 {
 		return queries.GetNameQueryResponse{
 			ID:       qry.ID,

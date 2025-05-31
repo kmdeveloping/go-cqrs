@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"log"
 
 	"github.com/kmdeveloping/go-cqrs/event"
@@ -9,7 +10,7 @@ import (
 
 type SomeOtherEventHandler struct{}
 
-func (s SomeOtherEventHandler) Handle(event events.SomeEvent) error {
+func (s SomeOtherEventHandler) Handle(ctx context.Context, event events.SomeEvent) error {
 	log.Println("SomeOtherEventHandler")
 	return nil
 }
