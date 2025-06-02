@@ -25,29 +25,37 @@ var (
 // typeCache stores reflection information to avoid expensive reflect.TypeOf calls in hot paths
 type typeCache struct {
 	mu    sync.RWMutex
-	cache map[interface{}]reflect.Type
+	cache map[string]reflect.Type // Use string as key to avoid interface{} comparison issues
 }
 
 func newTypeCache() *typeCache {
 	return &typeCache{
-		cache: make(map[interface{}]reflect.Type),
+		cache: make(map[string]reflect.Type),
 	}
 }
 
 // OPTIMIZATION: Cache reflection data to improve performance in hot paths
 func (tc *typeCache) getType(v interface{}) reflect.Type {
+	// Create a unique string key for the type
+	typ := reflect.TypeOf(v)
+	key := typ.String()
+
 	// Fast path: try to get from cache with read lock
 	tc.mu.RLock()
-	if typ, exists := tc.cache[v]; exists {
+	if cachedType, exists := tc.cache[key]; exists {
 		tc.mu.RUnlock()
-		return typ
+		return cachedType
 	}
 	tc.mu.RUnlock()
 
 	// Slow path: compute and cache the type
-	typ := reflect.TypeOf(v)
 	tc.mu.Lock()
-	tc.cache[v] = typ
+	// Double-check in case another goroutine added it
+	if cachedType, exists := tc.cache[key]; exists {
+		tc.mu.Unlock()
+		return cachedType
+	}
+	tc.cache[key] = typ
 	tc.mu.Unlock()
 
 	return typ
@@ -87,13 +95,14 @@ func NewCqrsManager() *Manager {
 
 // DEPENDENCY INJECTION: Set the current manager for all operations
 // This should be called once during application startup
-func SetManager(manager *Manager) {
+func SetManager(manager *Manager) error {
 	if manager == nil {
-		panic("manager cannot be nil")
+		return fmt.Errorf("manager cannot be nil")
 	}
 	currentManagerMu.Lock()
 	defer currentManagerMu.Unlock()
 	currentManager = manager
+	return nil
 }
 
 // DEPENDENCY INJECTION: Get the current manager
