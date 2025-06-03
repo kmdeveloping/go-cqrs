@@ -77,14 +77,28 @@ func executeCommand[T any](ctx context.Context, m *Manager, cmd *T) error {
 
 	if exists {
 		for _, v := range validatorsCopy {
+			// First try the generic validator interface
 			typedValidator, ok := v.(validator.IValidatorHandler[T])
-			if !ok {
-				return fmt.Errorf("validator type mismatch for %T", cmd)
+			if ok {
+				if err := typedValidator.Validate(ctx, cmd); err != nil {
+					return fmt.Errorf("validation failed for %T: %w", cmd, err)
+				}
+				continue
 			}
 
-			if err := typedValidator.Validate(ctx, cmd); err != nil {
-				return fmt.Errorf("validation failed for %T: %w", cmd, err)
+			// Fallback: try reflection-based validator with Validate(context.Context, any) error
+			reflectionValidator, ok := v.(interface {
+				Validate(context.Context, any) error
+			})
+			if ok {
+				if err := reflectionValidator.Validate(ctx, cmd); err != nil {
+					return fmt.Errorf("validation failed for %T: %w", cmd, err)
+				}
+				continue
 			}
+
+			// If neither interface works, it's a type mismatch
+			return fmt.Errorf("validator type mismatch for %T", cmd)
 		}
 	}
 
@@ -96,15 +110,24 @@ func executeCommand[T any](ctx context.Context, m *Manager, cmd *T) error {
 		return fmt.Errorf("handler not found for type %v", typ)
 	}
 
-	// Since we're accepting a pointer already, we can directly use it
+	// First try the generic command handler interface
 	h, ok := handler.(interface {
 		Handle(context.Context, *T) error
 	})
-	if !ok {
-		return fmt.Errorf("handler type mismatch for %v", typ)
+	if ok {
+		return h.Handle(ctx, cmd)
 	}
 
-	return h.Handle(ctx, cmd)
+	// Fallback: try reflection-based handler with Handle(context.Context, any) error
+	reflectionHandler, ok := handler.(interface {
+		Handle(context.Context, any) error
+	})
+	if ok {
+		return reflectionHandler.Handle(ctx, cmd)
+	}
+
+	// If neither interface works, it's a type mismatch
+	return fmt.Errorf("handler type mismatch for %v", typ)
 }
 
 func executeQuery[T query.IQuery, R any](ctx context.Context, m *Manager, qry T) (R, error) {
@@ -122,12 +145,30 @@ func executeQuery[T query.IQuery, R any](ctx context.Context, m *Manager, qry T)
 		return zero, fmt.Errorf("no query handler for %T", qry)
 	}
 
+	// First try the generic query handler interface
 	typedHandler, ok := handler.(query.IQueryHandler[T, R])
-	if !ok {
-		return zero, fmt.Errorf("query handler type mismatch for %T", qry)
+	if ok {
+		return typedHandler.Handle(ctx, qry)
 	}
 
-	return typedHandler.Handle(ctx, qry)
+	// Fallback: try reflection-based query handler with Handle(context.Context, any) (any, error)
+	reflectionHandler, ok := handler.(interface {
+		Handle(context.Context, any) (any, error)
+	})
+	if ok {
+		result, err := reflectionHandler.Handle(ctx, qry)
+		if err != nil {
+			return zero, err
+		}
+		// Type assert the result to the expected type
+		if typedResult, ok := result.(R); ok {
+			return typedResult, nil
+		}
+		return zero, fmt.Errorf("query result type mismatch: expected %T, got %T", *new(R), result)
+	}
+
+	// If neither interface works, it's a type mismatch
+	return zero, fmt.Errorf("query handler type mismatch for %T", qry)
 }
 
 // OPTIMIZATION: Improved event handling with error aggregation and better performance
@@ -165,15 +206,28 @@ func publishEvent[T event.IEvent](ctx context.Context, m *Manager, e T) error {
 		default:
 		}
 
+		// First try the generic event handler interface
 		typedHandler, ok := h.(event.IEventHandler[T])
-		if !ok {
-			errorAggregator.Add(fmt.Errorf("event handler type mismatch for %T", e))
+		if ok {
+			if err := typedHandler.Handle(ctx, e); err != nil {
+				errorAggregator.Add(fmt.Errorf("handler failed for %T: %w", e, err))
+			}
 			continue
 		}
 
-		if err := typedHandler.Handle(ctx, e); err != nil {
-			errorAggregator.Add(fmt.Errorf("handler failed for %T: %w", e, err))
+		// Fallback: try reflection-based handler with Handle(context.Context, any) error
+		reflectionHandler, ok := h.(interface {
+			Handle(context.Context, any) error
+		})
+		if ok {
+			if err := reflectionHandler.Handle(ctx, e); err != nil {
+				errorAggregator.Add(fmt.Errorf("handler failed for %T: %w", e, err))
+			}
+			continue
 		}
+
+		// If neither interface works, it's a type mismatch
+		errorAggregator.Add(fmt.Errorf("event handler type mismatch for %T", e))
 	}
 
 	return errorAggregator.Error()
