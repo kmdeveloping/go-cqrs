@@ -13,7 +13,7 @@ Clean dependency management with go-cqrs using the built-in container and auto-r
 - [Advanced Patterns](#advanced-patterns)
 - [Best Practices](#best-practices)
 
-## 🎯 Why Dependency Injection?
+## Why Dependency Injection?
 
 Dependency injection provides:
 
@@ -42,7 +42,7 @@ func (h *CreateUserHandler) Handle(ctx context.Context, cmd *CreateUserCommand) 
 }
 ```
 
-## 🏗️ Simple Container
+## Simple Container
 
 go-cqrs provides a built-in dependency injection container:
 
@@ -92,7 +92,7 @@ cqrs.Register[EmailService](container, &SMTPEmailService{
 })
 ```
 
-## 🎯 Handler Dependencies
+## Handler Dependencies
 
 ### Manual Dependency Injection
 
@@ -163,7 +163,7 @@ func (h *CreateUserHandler) Handle(ctx context.Context, cmd *CreateUserCommand) 
 }
 ```
 
-## 🚀 Auto-Registration with DI
+## Auto-Registration with DI
 
 The most powerful feature - automatic dependency injection during registration:
 
@@ -298,7 +298,7 @@ func setupApplication() {
 }
 ```
 
-## 🔄 Lifecycle Management
+## Lifecycle Management
 
 ### Singleton vs Transient
 
@@ -372,7 +372,7 @@ func setupEmailService(container *cqrs.SimpleContainer) {
 }
 ```
 
-## 🧪 Testing with DI
+## Testing with DI
 
 ### Mock Dependencies
 
@@ -487,7 +487,7 @@ func SetupIntegrationTestContainer() *cqrs.SimpleContainer {
 }
 ```
 
-## 🏗️ Advanced Patterns
+## Advanced Patterns
 
 ### Conditional Registration
 
@@ -591,7 +591,7 @@ func setupFromConfig(configPath string) *cqrs.SimpleContainer {
 }
 ```
 
-## 🎓 Best Practices
+## Best Practices
 
 ### 1. Use Interfaces
 
@@ -681,7 +681,7 @@ func setupDatabase(container *cqrs.SimpleContainer) {
 }
 ```
 
-## 🚀 Next Steps
+## Next Steps
 
 1. **Learn Auto-Registration**: [Auto-Registration Guide](./auto-registration.md)
 2. **Add Decorators**: [Decorators & Middleware](./decorators.md)
