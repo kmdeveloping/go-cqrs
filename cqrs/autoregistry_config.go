@@ -12,30 +12,24 @@ import (
 type AutoRegistryConfig struct {
 	// EnableMetrics enables detailed metrics collection
 	EnableMetrics bool
-
 	// EnableHealthChecks enables health check endpoints
 	EnableHealthChecks bool
-
 	// MaxRegistrationTime sets maximum time allowed for registration
 	MaxRegistrationTime time.Duration
-
 	// EnableDeadlockDetection enables goroutine deadlock detection
 	EnableDeadlockDetection bool
-
 	// EnableRetry enables retry mechanism for failed registrations
 	EnableRetry bool
-	MaxRetries  int
-	RetryDelay  time.Duration
-
+	// MaxRetries sets the maximum number of retries for failed registrations
+	MaxRetries int
+	// RetryDelay sets the delay between retries
+	RetryDelay time.Duration
 	// LogLevel controls logging verbosity
 	LogLevel LogLevel
-
 	// EnableValidation enables strict validation of handler signatures
 	EnableValidation bool
-
 	// RequireDependencyInjection fails registration if dependencies are missing
 	RequireDependencyInjection bool
-
 	// CustomLogger allows providing custom logger
 	CustomLogger *log.Logger
 }

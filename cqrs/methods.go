@@ -1,4 +1,3 @@
-// filepath: /Volumes/ExternalX1/Source/GolandProjects/go-cqrs/cqrs/methods.go
 package cqrs
 
 import (
@@ -16,12 +15,14 @@ type ErrorAggregator struct {
 	errors []error
 }
 
+// Add adds an error to the aggregator
 func (ea *ErrorAggregator) Add(err error) {
 	if err != nil {
 		ea.errors = append(ea.errors, err)
 	}
 }
 
+// Error returns a single error representing all collected errors
 func (ea *ErrorAggregator) Error() error {
 	if len(ea.errors) == 0 {
 		return nil
@@ -32,31 +33,33 @@ func (ea *ErrorAggregator) Error() error {
 	return fmt.Errorf("multiple errors: %v", ea.errors)
 }
 
+// HasErrors checks if any errors have been collected
 func (ea *ErrorAggregator) HasErrors() bool {
 	return len(ea.errors) > 0
 }
 
-// CLEAN API: Execute command using current manager
+// ExecuteCommand CLEAN API: Execute command using current manager
 func ExecuteCommand[T any](ctx context.Context, cmd *T) error {
 	return executeCommand(ctx, GetManager(), cmd)
 }
 
-// CLEAN API: Execute query using current manager
+// ExecuteQuery CLEAN API: Execute query using current manager
 func ExecuteQuery[T query.IQuery, R any](ctx context.Context, qry T) (R, error) {
 	return executeQuery[T, R](ctx, GetManager(), qry)
 }
 
-// CLEAN API: Publish event using current manager
+// PublishEvent CLEAN API: Publish event using current manager
 func PublishEvent[T event.IEvent](ctx context.Context, e T) error {
 	return publishEvent(ctx, GetManager(), e)
 }
 
-// CLEAN API: Publish event async using current manager
+// PublishEventAsync CLEAN API: Publish event async using current manager
 func PublishEventAsync[T event.IEvent](ctx context.Context, e T) error {
 	return publishEventAsync(ctx, GetManager(), e)
 }
 
 // Internal execution methods that work with specific manager instances
+// executeCommand executes the given command using the manager's registered handlers and validators
 func executeCommand[T any](ctx context.Context, m *Manager, cmd *T) error {
 	// OPTIMIZATION: Use cached type instead of expensive reflection
 	typ := m.typeCache.getType(cmd)
@@ -130,6 +133,7 @@ func executeCommand[T any](ctx context.Context, m *Manager, cmd *T) error {
 	return fmt.Errorf("handler type mismatch for %v", typ)
 }
 
+// executeQuery executes the given query using the manager's registered handlers
 func executeQuery[T query.IQuery, R any](ctx context.Context, m *Manager, qry T) (R, error) {
 	var zero R
 	// OPTIMIZATION: Use cached type instead of expensive reflection
@@ -172,6 +176,7 @@ func executeQuery[T query.IQuery, R any](ctx context.Context, m *Manager, qry T)
 }
 
 // OPTIMIZATION: Improved event handling with error aggregation and better performance
+// publishEvent executes all handlers for the given event type
 func publishEvent[T event.IEvent](ctx context.Context, m *Manager, e T) error {
 	// OPTIMIZATION: Use cached type instead of expensive reflection
 	typ := m.typeCache.getType(e)
@@ -234,6 +239,7 @@ func publishEvent[T event.IEvent](ctx context.Context, m *Manager, e T) error {
 }
 
 // OPTIMIZATION: Async event publishing for better performance in high-throughput scenarios
+// publishEventAsync starts a goroutine to handle the event and returns immediately
 func publishEventAsync[T event.IEvent](ctx context.Context, m *Manager, e T) error {
 	// For async processing, we start the event handling in a goroutine
 	// and return immediately. Errors are logged but not returned.
@@ -248,15 +254,17 @@ func publishEventAsync[T event.IEvent](ctx context.Context, m *Manager, e T) err
 	return nil
 }
 
-// BACKWARD COMPATIBILITY: Convenience methods that use context.Background()
+// ExecuteCommandWithBackground BACKWARD COMPATIBILITY: Convenience methods that use context.Background()
 func ExecuteCommandWithBackground[T any](cmd *T) error {
 	return ExecuteCommand(context.Background(), cmd)
 }
 
+// ExecuteQueryWithBackground BACKWARD COMPATIBILITY: Convenience methods that use context.Background()
 func ExecuteQueryWithBackground[T query.IQuery, R any](qry T) (R, error) {
 	return ExecuteQuery[T, R](context.Background(), qry)
 }
 
+// PublishEventWithBackground BACKWARD COMPATIBILITY: Convenience methods that use context.Background()
 func PublishEventWithBackground[T event.IEvent](e T) error {
 	return PublishEvent(context.Background(), e)
 }
